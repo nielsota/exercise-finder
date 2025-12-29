@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <!-- head contains the page setup and styling -->
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Exercise Finder</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <!-- MathJax config MUST come before the MathJax script -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['\\(', '\\)'], ['$', '$']],
+          displayMath: [['\\[', '\\]'], ['$$', '$$']]
+        },
+        startup: {
+          typeset: false  // we'll typeset manually after DOM updates
+        }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script> 
+  </head>
+  <body>
+    <header>
+      <h1>Exercise Finder</h1>
+      <p class="muted">Search your vector store, fetch full text, format multipart, and show images.</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="row">
+          <button id="bestBtn">Best</button>
+          <button id="randBtn">Randomize</button>
+          <button id="redoBtn" disabled>Redo</button>
+          <span id="status" class="muted"></span>
+        </div>
+
+        <div class="mt">
+          <textarea id="q" placeholder="Describe the exercise you want (searches across all exams)…"></textarea>
+        </div>
+
+        <div class="row mt-sm">
+          <label class="muted">Max results:
+            <input id="maxResults" type="number" min="1" max="20" value="5" />
+          </label>
+        </div>
+      </section>
+
+      <section id="out" class="card" style="display:none;"></section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

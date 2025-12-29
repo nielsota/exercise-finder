@@ -1,0 +1,43 @@
+# Git
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docs (but keep README.md for pyproject.toml)
+docs/
+*.md
+!README.md
+
+# Exclude raw PDFs, keep processed data
+data/questions/
+
+# Misc
+.DS_Store
+*.log
+.env
+.env.*
+

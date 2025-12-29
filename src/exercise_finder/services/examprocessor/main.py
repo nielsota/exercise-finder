@@ -67,6 +67,7 @@ async def process_question(
         id=f"{exam.name}-q{question_number}",
         exam=exam.exam,
         question_number=str(question_number),
+        title=ocr.title,
         question_text=ocr.question_text,
         figure=ocr.figure,
         source_images=relative_paths['all'],

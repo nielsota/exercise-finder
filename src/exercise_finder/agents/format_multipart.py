@@ -20,6 +20,7 @@ Output a JSON object matching this schema exactly:
 {MultipartQuestionOutput.model_json_schema()}
 
 Rules:
+- `title` is the question title. It should be included in the title field.
 - `stem` contains only the shared setup/context before the first subpart.
 - `parts` contains each subpart in order; preserve wording and any points annotations (e.g. '4p').
 - If there are no explicit subparts, put the entire text into `stem` and set `parts` to an empty list.

@@ -63,9 +63,8 @@ class QuestionFromImagesOutput(BaseModel):
     """
 
     question_text: str
+    title: str
     figure: FigureInfo
-    confidence: float | None = None
-    notes: str | None = None
 
 
 class QuestionRecord(BaseModel):
@@ -75,6 +74,7 @@ class QuestionRecord(BaseModel):
 
     id: str
     exam: Exam
+    title: str
     question_number: str
     question_text: str
     figure: FigureInfo
@@ -85,10 +85,12 @@ class QuestionRecord(BaseModel):
 
 class MultipartQuestionPart(BaseModel):
     label: str
+    points: int
     text: str
 
 
 class MultipartQuestionOutput(BaseModel):
+    title: str
     stem: str
     parts: list[MultipartQuestionPart]
 

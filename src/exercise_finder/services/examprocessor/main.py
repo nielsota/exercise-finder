@@ -9,41 +9,34 @@ from loguru import logger
 
 from exercise_finder.enums import OpenAIModel
 from exercise_finder.utils.progressbar import create_progress_bar
-from exercise_finder.pydantic_models import QuestionRecord
+from exercise_finder.pydantic_models import QuestionRecord, ExamFolderStructure, QuestionFolderStructure
 from exercise_finder.agents.images_to_question import transcribe_question_images
-from exercise_finder.services.image_to_question.helpers import (
-    _exam_from_exam_dir,
-    _iter_question_dirs,
-    _parse_question_number,
-    get_pages_and_figures_from_question_dir,
-    paths_relative_to,
-)
-import exercise_finder.paths as paths
+
 
 
 async def process_question(
     *,
-    question_dir: Path,
-    exam_dir: Path,
+    question: QuestionFolderStructure,
+    exam: ExamFolderStructure,
     model: OpenAIModel,
 ) -> QuestionRecord:
     """
     Process a single question directory into a QuestionRecord.
     
     Args:
-        question_dir: Path to question directory (e.g., q01/)
-        exam_dir: Parent exam directory (for relative path calculation)
+        question: Validated question folder structure
+        exam: Validated exam folder structure (contains exam metadata and root path)
         model: OpenAI model to use for transcription
         
     Returns:
         QuestionRecord with transcribed text and image paths
         
     Example:
-        >>> exam_dir = Path("data/questions-images/VW-1025-a-18-1-o")
-        >>> question_dir = exam_dir / "q01"
+        >>> exam = ExamFolderStructure.from_exam_dir(Path("data/questions-images/VW-1025-a-18-1-o"))
+        >>> question = exam.questions[0]
         >>> record = await process_question(
-        ...     question_dir=question_dir,
-        ...     exam_dir=exam_dir,
+        ...     question=question,
+        ...     exam=exam,
         ...     model=OpenAIModel.GPT_4O,
         ... )
         >>> record.question_number
@@ -51,38 +44,35 @@ async def process_question(
         >>> record.page_images
         ['q01/pages/page1.png', 'q01/pages/page2.png']
     """
-    # Parse question number from directory name (q01 -> "1")
-    question_number = _parse_question_number(question_dir.name)
-    
-    # Get pages and figures
-    pages, figures = get_pages_and_figures_from_question_dir(question_dir)
+    # Extract question number from directory name (q01 -> "1")
+    question_number = question.get_question_number()
     
     # Transcribe the question using OCR agent
     logger.info(
-        "Transcribing question_dir={question_dir} images={n}",
-        question_dir=question_dir,
-        n=len(pages) + len(figures),
+        "Transcribing question={question} images={n}",
+        question=question.number,
+        n=len(question.pages) + len(question.figures),
     )
     
     ocr = await transcribe_question_images(
-        page_images=pages,
-        figure_images=figures,
+        page_images=question.pages,
+        figure_images=question.figures,
         model=model,
     )
     
     # Build question record with relative paths
-    exam = _exam_from_exam_dir(exam_dir)
-    all_images = [*pages, *figures]
+    relative_paths = question.paths_relative_to(exam.exam_dir)
     
     return QuestionRecord(
-        id=f"{exam_dir.name}-q{question_number}",
-        exam=exam,
+        id=f"{exam.name}-q{question_number}",
+        exam=exam.exam,
         question_number=str(question_number),
+        title=ocr.title,
         question_text=ocr.question_text,
         figure=ocr.figure,
-        source_images=paths_relative_to(all_images, exam_dir),
-        page_images=paths_relative_to(pages, exam_dir),
-        figure_images=paths_relative_to(figures, exam_dir),
+        source_images=relative_paths['all'],
+        page_images=relative_paths['pages'],
+        figure_images=relative_paths['figures'],
     )
 
 
@@ -122,38 +112,35 @@ async def process_exam_dir(*, exam_dir: Path, out_path: Path, model: OpenAIModel
     out_path.parent.mkdir(parents=True, exist_ok=True)
     logger.info("Writing JSONL to {out_path}", out_path=out_path)
 
-    # Find all question directories
-    question_dirs: list[Path] = _iter_question_dirs(exam_dir)
-    logger.info("Found {n} questions", n=len(question_dirs))
+    # Validate and load exam structure
+    exam = ExamFolderStructure.from_exam_dir(exam_dir)
+    logger.info("Found {n} questions", n=len(exam.questions))
     
     # Process each question with progress bar
-    with create_progress_bar(f"Processing {exam_dir.name}", total=len(question_dirs)) as (progress, task):
+    with create_progress_bar(f"Processing {exam.name}", total=len(exam.questions)) as (progress, task):
         with out_path.open("w", encoding="utf-8") as f:
-            for question_dir in question_dirs:
+            for question in exam.questions:
                 try:
                     record = await process_question(
-                        question_dir=question_dir,
-                        exam_dir=exam_dir,
+                        question=question,
+                        exam=exam,
                         model=model,
                     )
                     f.write(json.dumps(record.model_dump(mode="json"), ensure_ascii=False) + "\n")
-                    progress.update(task, advance=1, description=f"✓ {exam_dir.name} - q{record.question_number}")
+                    progress.update(task, advance=1, description=f"✓ {exam.name} - q{record.question_number}")
                 except ValueError as e:
-                    logger.warning("Skipping {question_dir}: {error}", question_dir=question_dir, error=e)
-                    progress.update(task, advance=1, description=f"⚠ {exam_dir.name} - {question_dir.name} (skipped)")
+                    logger.warning("Skipping {question}: {error}", question=question.number, error=e)
+                    progress.update(task, advance=1, description=f"⚠ {exam.name} - {question.number} (skipped)")
                     continue
 
 
-def images_to_questions(*, exam_dir: Path, out: Path | None, model: OpenAIModel) -> None:
+def process_exam(*, exam_dir: Path, out_path: Path, model: OpenAIModel) -> None:
     """
     CLI entry point: Process exam directory synchronously.
     
     Args:
         exam_dir: Path to exam directory
-        out: Output JSONL path (defaults to data/questions-extracted/<exam-name>.jsonl)
+        out_path: Output JSONL path
         model: OpenAI model to use
     """
-    if out is None:
-        out = paths.questions_extracted_dir() / f"{exam_dir.name}.jsonl"
-    
-    asyncio.run(process_exam_dir(exam_dir=exam_dir, out_path=out, model=model))
+    asyncio.run(process_exam_dir(exam_dir=exam_dir, out_path=out_path, model=model))

@@ -31,6 +31,7 @@ dev = [
 
 [project.scripts]
 exercise-finder = "exercise_finder.cli.main:main"
+mw = "exercise_finder.cli.main:main"
 
 [build-system]
 requires = ["hatchling"]

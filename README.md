@@ -1,26 +1,47 @@
-Steps
+# Exercise Finder (MathWizard)
 
-1. For each exam, parse the exam images and compile JSONL
-    - uv run exercise-finder images-to-questions --exam-dir data/questions-images/VW-1025-a-18-1-o
-    - uv run exercise-finder images-to-questions --exam-dir data/questions-images/VW-1025-a-18-2-o
-    - uv run exercise-finder images-to-questions --exam-dir data/questions-images/VW-1025-a-19-1-o 
+Quick command reference using the `mw` CLI.
 
-This will write to the data/questions-extracted directory by default 
+## Workflow Steps
 
-1. For each JSONL in data/questions-extracted/
+### 1. Extract questions from exam images
 
-    **Do once**: 
-        - uv run exercise-finder vectorstore-create --name examstore24122025
+Parse exam images and compile to JSONL:
 
-        fetch id from here: vs_694b9b4403e881918fd7b5c04a301771
+```bash
+uv run mw extract from-images --exam-dir data/questions-images/VW-1025-a-18-1-o
+uv run mw extract from-images --exam-dir data/questions-images/VW-1025-a-18-2-o
+uv run mw extract from-images --exam-dir data/questions-images/VW-1025-a-19-1-o
+```
 
-    **Then let run over directory (default: questions-extracted):**
-        - uv run exercise-finder vectorstore-add --vector-store-id vs_694b9b4403e881918fd7b5c04a301771
+This writes to `data/questions-extracted/` by default.
 
-2. Now can try to fetch a few questions:
-    **CLI fetch (prints JSON with image paths)**
-    
-    - uv run exercise-finder vectorstore-fetch --vector-store-id <INSERT_ID> --query "parametric equations" --exam-dir data/questions-images/VW-1025-a-18-1-o
+### 2. Create and populate vector store
 
-    **Web UI (works across all exams)**
-    - uv run exercise-finder ui --vector-store-id <INSERT_ID> --exams-root data/questions-images
+**Create vector store (do once):**
+```bash
+uv run mw vectorstore create --name examstore24122025
+```
+
+Note the returned vector store ID (e.g., `vs_694b9b4403e881918fd7b5c04a301771`)
+
+**Add extracted questions to vector store:**
+```bash
+uv run mw vectorstore add --vector-store-id vs_694b9b4403e881918fd7b5c04a301771
+```
+
+Processes all JSONL files in `data/questions-extracted/` by default.
+
+### 3. Query and use
+
+**CLI search:**
+```bash
+uv run mw vectorstore fetch --vector-store-id <INSERT_ID> --query "parametric equations" --exam-dir data/questions-images/VW-1025-a-18-1-o
+```
+
+**Web UI (recommended):**
+```bash
+uv run mw ui start --vector-store-id <INSERT_ID> --exams-root data/questions-images
+```
+
+Access at http://localhost:8000 for interactive search with image display.

@@ -6,7 +6,8 @@ from pathlib import Path
 import typer  # type: ignore[import-not-found]
 
 from exercise_finder.enums import OpenAIModel
-from exercise_finder.services.image_to_question.main import images_to_questions
+import exercise_finder.paths as paths
+from exercise_finder.services.examprocessor.main import process_exam
 
 
 app = typer.Typer(help="Extract questions from images")
@@ -23,10 +24,10 @@ def from_images(
         readable=True,
         help="Exam directory with qNN/pages/*.png and optional qNN/figures/*.png.",
     ),
-    out: Path | None = typer.Option(
+    out_path: Path | None = typer.Option(
         None,
-        "--out",
-        help="Output JSONL path (default: data/questions-extracted/<exam-dir-name>.jsonl).",
+        "--out-path",
+        help="Output JSONL path",
     ),
     model: OpenAIModel = typer.Option(
         OpenAIModel.GPT_4O,
@@ -36,5 +37,10 @@ def from_images(
     ),
 ) -> None:
     """Convert structured image directory into JSONL (one record per qNN folder)."""
-    images_to_questions(exam_dir=exam_dir, out=out, model=model)
 
+    # default to data/questions-extracted/<exam-dir-name>.jsonl
+    if out_path is None:
+        out_path = paths.questions_extracted_jsonl(exam_dir.name)
+
+    # process the exam
+    process_exam(exam_dir=exam_dir, out_path=out_path, model=model)

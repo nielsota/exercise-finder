@@ -12,3 +12,11 @@ image_suffixes = {
     f".{ImageType.JPEG.value}",
     f".{ImageType.WEBP.value}",
 }
+
+# System/hidden files to ignore when processing directories
+IGNORED_FILES = {
+    ".DS_Store",     # macOS
+    ".gitkeep",      # Git placeholder
+    "Thumbs.db",     # Windows
+    "desktop.ini",   # Windows
+}

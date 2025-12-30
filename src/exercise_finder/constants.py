@@ -20,3 +20,6 @@ IGNORED_FILES = {
     "Thumbs.db",     # Windows
     "desktop.ini",   # Windows
 }
+
+# Session expiration time in seconds (24 hours)
+SESSION_EXPIRATION_SECONDS = 24 * 60 * 60

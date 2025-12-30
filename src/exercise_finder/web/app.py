@@ -20,10 +20,8 @@ from starlette.responses import FileResponse, RedirectResponse  # type: ignore[i
 from exercise_finder.services.vectorstore.main import vectorstore_fetch
 from exercise_finder.services.questionformatter.main import load_formatted_question_from_exam_and_question_number
 from exercise_finder.config import get_vector_store_id, refresh_vector_store_id
+from exercise_finder.constants import SESSION_EXPIRATION_SECONDS
 import exercise_finder.paths as paths
-
-# Session expiration time in seconds (24 hours)
-SESSION_EXPIRATION_SECONDS = 24 * 60 * 60
 
 
 class FetchRequest(BaseModel):
@@ -81,10 +79,12 @@ def create_app(
     templates = Jinja2Templates(directory=str(web_dir / "templates"))
     app.mount("/static", StaticFiles(directory=str(web_dir / "static")), name="static")
 
+
     @app.exception_handler(NotAuthenticatedException)
     async def not_authenticated_handler(request: Request, exc: NotAuthenticatedException) -> RedirectResponse:
         """Redirect unauthenticated users to login page."""
         return RedirectResponse(url="/login", status_code=303)
+
 
     @app.get("/login", response_class=HTMLResponse)
     async def login(request: Request) -> HTMLResponse:

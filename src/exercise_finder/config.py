@@ -33,7 +33,7 @@ def _get_vector_store_id_cached() -> str:
     use_ssm = os.environ.get("USE_SSM", "false").lower() == "true"
     
     if use_ssm:
-        return _fetch_from_ssm("/exercise-finder/vector-store-id")
+        return _fetch_from_ssm("/mathwizard-vector-store-id")
     
     # Fall back to environment variable
     value = os.environ.get("VECTOR_STORE_ID")
@@ -70,7 +70,7 @@ def update_vector_store_id(new_id: str) -> None:
     
     ssm = boto3.client("ssm")
     ssm.put_parameter(
-        Name="/exercise-finder/vector-store-id",
+        Name="/mathwizard-vector-store-id",
         Value=new_id,
         Type="String",
         Overwrite=True,

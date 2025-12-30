@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 from typing import Literal
 
@@ -20,6 +21,9 @@ from exercise_finder.services.vectorstore.main import vectorstore_fetch
 from exercise_finder.services.questionformatter.main import load_formatted_question_from_exam_and_question_number
 from exercise_finder.config import get_vector_store_id, refresh_vector_store_id
 import exercise_finder.paths as paths
+
+# Session expiration time in seconds (24 hours)
+SESSION_EXPIRATION_SECONDS = 24 * 60 * 60
 
 
 class FetchRequest(BaseModel):
@@ -64,7 +68,11 @@ def create_app(
     
     # Add session middleware for authentication
     secret_key = os.getenv("SESSION_SECRET_KEY", "dev-secret-change-in-production")
-    app.add_middleware(SessionMiddleware, secret_key=secret_key)
+    app.add_middleware(
+        SessionMiddleware,
+        secret_key=secret_key,
+        max_age=SESSION_EXPIRATION_SECONDS,  # Cookie expires after 24 hours
+    )
     
     app.state.client = OpenAI()
     app.state.exams_root = exams_root
@@ -103,15 +111,44 @@ def create_app(
                 status_code=401,
             )
 
+        # Set authentication with timestamp
         request.session["authenticated"] = True
+        request.session["login_time"] = time.time()
         return RedirectResponse(url="/", status_code=303)
+
+    
+    @app.post("/logout")
+    async def logout(request: Request) -> RedirectResponse:
+        """
+        Clear the session and redirect to login page.
+        """
+        request.session.clear()
+        return RedirectResponse(url="/login", status_code=303)
 
     
     def is_authenticated(request: Request) -> bool:
         """
-        Check if the user is authenticated.
+        Check if the user is authenticated and session hasn't expired.
+        
+        Sessions expire after 24 hours.
         """
-        return request.session.get("authenticated", False)
+        if not request.session.get("authenticated", False):
+            return False
+        
+        # Check if session has expired
+        login_time = request.session.get("login_time")
+        if login_time is None:
+            # Old session without timestamp - invalidate it
+            request.session.clear()
+            return False
+        
+        current_time = time.time()
+        if current_time - login_time > SESSION_EXPIRATION_SECONDS:
+            # Session expired - clear it
+            request.session.clear()
+            return False
+        
+        return True
 
 
     def require_authentication(request: Request) -> bool:

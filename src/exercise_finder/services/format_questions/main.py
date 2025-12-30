@@ -4,7 +4,7 @@ from pathlib import Path
 import asyncio
 
 from exercise_finder.enums import OpenAIModel
-from exercise_finder.services.format_questions.helpers import _load_question_records_from_jsonl, _format_question, _save_formatted_question
+from exercise_finder.services.format_questions.helpers import _format_question, _save_formatted_question
 from exercise_finder.pydantic_models import MultipartQuestionOutput, QuestionRecord
 import exercise_finder.paths as paths
 
@@ -35,7 +35,7 @@ def format_questions(
         exam_out_dir.mkdir(parents=True, exist_ok=True)
 
         # load the question records from the input directory
-        question_records: list[QuestionRecord] = _load_question_records_from_jsonl(exam_json)
+        question_records: list[QuestionRecord] = QuestionRecord.from_jsonl(exam_json)
 
         for question_record in question_records:
 

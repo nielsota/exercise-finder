@@ -8,6 +8,7 @@ import typer  # type: ignore[import-not-found]
 from exercise_finder.enums import OpenAIModel
 import exercise_finder.paths as paths
 from exercise_finder.services.examprocessor.main import process_exam
+from exercise_finder.pydantic_models import Exam
 
 
 app = typer.Typer(help="Extract questions from images")
@@ -44,3 +45,29 @@ def from_images(
 
     # process the exam
     process_exam(exam_dir=exam_dir, out_path=out_path, model=model)
+
+
+@app.command("refresh-all")
+def refresh_all(
+    exams_root: Path = typer.Option(
+        paths.questions_images_root(),
+        "--exams-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+    ),
+) -> None:
+    """Refresh all exams in the exams root directory."""
+    for exam_dir in exams_root.glob("*"):
+        if not exam_dir.is_dir():
+            continue
+        
+        # Only process directories that match exam naming pattern
+        try:
+            Exam.from_file_path(Path(f"{exam_dir.name}.pdf")) # use exam class to validate the exam directory
+            from_images(exam_dir=exam_dir)
+        except (ValueError, KeyError, IndexError):
+            # Skip directories that don't match exam pattern (e.g., "template")
+            typer.echo(f"Skipping non-exam directory: {exam_dir.name}")
+            continue

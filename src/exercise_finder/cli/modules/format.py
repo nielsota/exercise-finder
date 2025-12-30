@@ -6,7 +6,7 @@ from pathlib import Path
 import typer  # type: ignore[import-not-found]
 
 from exercise_finder.enums import OpenAIModel
-from exercise_finder.services.format_questions.main import format_questions
+from exercise_finder.services.questionformatter.main import format_questions
 import exercise_finder.paths as paths
 
 

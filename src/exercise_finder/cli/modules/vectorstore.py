@@ -14,7 +14,7 @@ from exercise_finder.services.vectorstore.main import (
     vectorstore_fetch,
     search_vector_store,
 )
-from exercise_finder.services.format_questions.main import load_formatted_question_from_exam_and_question_number
+from exercise_finder.services.questionformatter.main import load_formatted_question_from_exam_and_question_number
 from exercise_finder.config import update_vector_store_id
 import exercise_finder.paths as paths
 from .utils import get_openai_client

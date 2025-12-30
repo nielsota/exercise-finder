@@ -71,12 +71,14 @@ def refresh_all(
         if not exam_dir.is_dir():
             continue
         
-        # Only process directories that match exam naming pattern
+        # Validate directory name matches exam naming pattern
         try:
-            Exam.from_file_path(Path(f"{exam_dir.name}.pdf"))  # use exam class to validate the exam directory
-            typer.echo(f"Processing exam directory: {exam_dir.name}")
-            _process_exam_images(exam_dir=exam_dir)
+            Exam.from_file_path(Path(f"{exam_dir.name}.pdf"))  # use exam class to validate
         except (ValueError, KeyError, IndexError):
             # Skip directories that don't match exam pattern (e.g., "template")
             typer.echo(f"Skipping non-exam directory: {exam_dir.name}")
             continue
+        
+        # Process the validated exam directory
+        typer.echo(f"Processing exam directory: {exam_dir.name}")
+        _process_exam_images(exam_dir=exam_dir)

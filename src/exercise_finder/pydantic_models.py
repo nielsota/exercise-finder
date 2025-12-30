@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 import re
+import json
+from typing import Any
 
 from pydantic import BaseModel, model_validator # type: ignore
 
@@ -10,6 +12,7 @@ from exercise_finder.constants import pdf_acronym_to_level_mapping
 from exercise_finder.enums import ExamLevel
 
 class Exam(BaseModel):
+    id: str
     year: int
     tijdvak: int
     level: ExamLevel
@@ -19,6 +22,7 @@ class Exam(BaseModel):
         """Create an Exam from a file path."""
         parts = file_path.stem.split("-")
         return cls(
+            id=file_path.stem,
             level=pdf_acronym_to_level_mapping[parts[0].lower()],
             year=datetime.strptime(parts[3], "%y").year,
             tijdvak=int(parts[4]),
@@ -81,6 +85,94 @@ class QuestionRecord(BaseModel):
     source_images: list[str]
     page_images: list[str] | None = None
     figure_images: list[str] | None = None
+
+    @classmethod
+    def from_jsonl(cls, jsonl_path: Path) -> list["QuestionRecord"]:
+        """Load question records from a JSONL file."""
+
+        # validate the jsonl file
+        if not jsonl_path.exists():
+            raise FileNotFoundError(f"JSONL file not found: {jsonl_path}")
+        
+        if not jsonl_path.is_file():
+            raise ValueError(f"Path is not a file: {jsonl_path}")
+        
+        # Validate file extension
+        if jsonl_path.suffix.lower() != ".jsonl":
+            raise ValueError(f"File must have .jsonl extension, got: {jsonl_path.suffix}")
+        
+        # Load and validate records
+        records: list[QuestionRecord] = []
+        with jsonl_path.open("r", encoding="utf-8") as f:
+            for line_num, line in enumerate(f, start=1):
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    records.append(cls.model_validate_json(line))
+                except Exception as e:
+                    raise ValueError(f"Invalid record at line {line_num}: {e}") from e
+        
+        # Validate file is not empty
+        if not records:
+            raise ValueError(f"JSONL file contains no valid records: {jsonl_path}")
+        
+        return records
+
+    def to_text(self) -> str:
+        """Convert a question record to a text string for vector store indexing."""
+        parts = [self.title.strip(), self.question_text.strip()]
+        if self.figure and self.figure.description:
+            parts.append("\n\n[FIGURE]\n" + self.figure.description.strip())
+        return "\n".join(parts).strip() + "\n"
+
+
+    def attributes_for_vector_store(self) -> dict[str, Any]:
+        """Convert a question record to a dictionary of attributes for the vector store."""
+        return {
+            "record_id": self.id,
+            "exam_id": self.exam.id,
+            "exam_level": self.exam.level.value,
+            "exam_year": str(self.exam.year),
+            "exam_tijdvak": str(self.exam.tijdvak),
+            "question_number": str(self.question_number),
+            "page_images": json.dumps(self.page_images or [], ensure_ascii=False),
+            "figure_images": json.dumps(self.figure_images or [], ensure_ascii=False),
+            "source_images": json.dumps(self.source_images or [], ensure_ascii=False),
+            "figure_present": str(bool(self.figure.present)),
+            "figure_missing": str(bool(self.figure.missing)),
+    }
+
+
+class QuestionRecordVectorStoreAttributes(BaseModel):
+    """
+    Validated attributes from a vector store result.
+    
+    These are the metadata fields stored alongside each question in the vector store.
+    """
+    record_id: str
+    exam_id: str
+    exam_level: str
+    exam_year: str
+    exam_tijdvak: str
+    question_number: str
+    page_images: str  # JSON string
+    figure_images: str  # JSON string
+    source_images: str  # JSON string
+    figure_present: str
+    figure_missing: str
+    
+    def get_page_images(self) -> list[str]:
+        """Parse page_images JSON string to list."""
+        return json.loads(self.page_images)
+    
+    def get_figure_images(self) -> list[str]:
+        """Parse figure_images JSON string to list."""
+        return json.loads(self.figure_images)
+    
+    def get_source_images(self) -> list[str]:
+        """Parse source_images JSON string to list."""
+        return json.loads(self.source_images)
 
 
 class MultipartQuestionPart(BaseModel):

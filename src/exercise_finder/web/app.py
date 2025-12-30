@@ -17,6 +17,7 @@ from starlette.requests import Request  # type: ignore[import-not-found]
 from starlette.responses import FileResponse, RedirectResponse  # type: ignore[import-not-found]
 
 from exercise_finder.services.vectorstore.main import vectorstore_fetch
+from exercise_finder.services.format_questions.main import load_formatted_question_from_exam_and_question_number
 from exercise_finder.config import get_vector_store_id, refresh_vector_store_id
 import exercise_finder.paths as paths
 
@@ -144,16 +145,29 @@ def create_app(
             raise HTTPException(status_code=400, detail="max_results must be between 1 and 20")
 
         vs_id: str = get_vector_store_id()
-        out = await vectorstore_fetch(
+        
+        # Step 1: Search vector store (vectorstore service)
+        search_result = await vectorstore_fetch(
             vector_store_id=vs_id,
             query=query,
             max_results=payload.max_results,
             best=(payload.mode == "best"),
         )
-        exam_id = out["exam_id"]
-        out["page_images"] = [f"/image/{exam_id}/{p}" for p in out["page_images"]]
-        out["figure_images"] = [f"/image/{exam_id}/{p}" for p in out["figure_images"]]
-        return out
+        
+        # Step 2: Load formatted question (format_questions service)
+        formatted_question = load_formatted_question_from_exam_and_question_number(
+            exam_id=search_result["exam_id"],
+            question_number=search_result["question_number"],
+        )
+        
+        # Step 3: Compose and return
+        exam_id = search_result["exam_id"]
+        return {
+            **search_result,
+            "formatted": formatted_question.model_dump(mode="json"),
+            "page_images": [f"/image/{exam_id}/{p}" for p in search_result["page_images"]],
+            "figure_images": [f"/image/{exam_id}/{p}" for p in search_result["figure_images"]],
+        }
 
 
     @app.post("/api/refresh-config")

@@ -13,6 +13,7 @@ from exercise_finder.services.vectorstore.main import (
     vectorstore_fetch,
     search_vector_store,
 )
+from exercise_finder.services.format_questions.main import load_formatted_question_from_exam_and_question_number
 import exercise_finder.paths as paths
 from .utils import get_openai_client
 
@@ -89,13 +90,13 @@ def fetch(
     and print the result including resolved image paths.
 
     Steps:
-    1. Search the vector store for a query
-    2. Fetch the full stored text for the best hit
-    3. Format the question text into a multipart question
-    4. Resolve image paths for display/attachment
-    5. Print the result
+    1. Search the vector store for a query (vectorstore service)
+    2. Load the formatted question (format_questions service)
+    3. Resolve image paths for display/attachment
+    4. Print the result
     """
-    result = asyncio.run(
+    # Step 1: Search vector store (vectorstore service)
+    search_result = asyncio.run(
         vectorstore_fetch(
             vector_store_id=vector_store_id,
             query=query,
@@ -103,14 +104,27 @@ def fetch(
             best=best,
         )
     )
-    exam_id = result["exam_id"]
-    result["page_images"] = [
-        str(paths.exam_asset_under_root(exams_root, exam_id, p).resolve())
-        for p in result["page_images"]
-    ]
-    result["figure_images"] = [
-        str(paths.exam_asset_under_root(exams_root, exam_id, p).resolve())
-        for p in result["figure_images"]
-    ]
+    
+    # Step 2: Load formatted question (format_questions service)
+    formatted_question = load_formatted_question_from_exam_and_question_number(
+        exam_id=search_result["exam_id"],
+        question_number=search_result["question_number"],
+    )
+    
+    # Step 3: Compose results
+    exam_id = search_result["exam_id"]
+    result = {
+        **search_result,
+        "formatted": formatted_question.model_dump(mode="json"),
+        "page_images": [
+            str(paths.exam_asset_under_root(exams_root, exam_id, p).resolve())
+            for p in search_result["page_images"]
+        ],
+        "figure_images": [
+            str(paths.exam_asset_under_root(exams_root, exam_id, p).resolve())
+            for p in search_result["figure_images"]
+        ],
+    }
+    
     typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
 

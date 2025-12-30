@@ -2,23 +2,20 @@ from __future__ import annotations
 
 from pathlib import Path
 import os
-import json
 import random
 from typing import Any
 
 from dotenv import load_dotenv # type: ignore[import-not-found]
 from openai import OpenAI # type: ignore[import-not-found]
 
-from exercise_finder.services.vectorstore.helpers import (
-    _load_question_records,
-    _write_index_files,
-    _save_file_to_openai,
-    _save_file_to_vector_store,
-    _attributes_from_record,
-)
-from exercise_finder.services.format_questions.main import load_formatted_question_from_exam_and_question_number
-from exercise_finder.pydantic_models import QuestionRecord
+from exercise_finder.pydantic_models import QuestionRecord, QuestionRecordVectorStoreAttributes
 import exercise_finder.paths as paths
+
+from .helpers import (
+    write_index_files,
+    save_file_to_openai,
+    save_file_to_vector_store,
+)
 
 def _get_client() -> OpenAI:
     load_dotenv()
@@ -35,14 +32,26 @@ async def vectorstore_fetch(*,
     best: bool = True,
 ) -> dict:
     """
-    Retrieve the best match, fetch full stored text, format into multipart structure,
-    and print the result including resolved image paths.
+    Search the vector store and return the best matching question's metadata.
+
+    This function ONLY handles vector store operations - it does NOT load
+    formatted questions. Callers should compose this with format_questions
+    service if they need formatted output.
 
     Steps:
     1. Search the vector store for a query
-    2. Fetch the full stored text for the best hit
-    3. Format the question text into a multipart question
-    4. Return relative image paths (from metadata)
+    2. Select best (or random) result
+    3. Parse and validate attributes
+    4. Return metadata with image paths
+
+    Returns:
+        Dictionary containing:
+        - record_id: Question record ID
+        - exam_id: Exam identifier
+        - question_number: Question number
+        - score: Search relevance score
+        - page_images: List of page image paths
+        - figure_images: List of figure image paths
     """
     client = _get_client()
 
@@ -55,39 +64,22 @@ async def vectorstore_fetch(*,
     )
     if not results:
         raise ValueError("No results found.")
-
-    # 2. Select the best (or random) result, then fetch the full stored text
+    
+    # 2. Select the best (or random) result, then parse and validate attributes
     selected_result = results[0] if best else random.choice(results)
-    attrs = selected_result.get("attributes") or {}
-    exam_id = attrs.get("exam_id")
-    question_number = attrs.get("question_number")
+    attrs_dict = selected_result.get("attributes") or {}
     
-    # we require a question number to load the formatted question
-    if not question_number:
-        raise ValueError("Missing question_number in vector-store attributes.")
+    # Validate attributes using Pydantic (will raise ValidationError if any required field is missing)
+    attrs = QuestionRecordVectorStoreAttributes.model_validate(attrs_dict)
 
-    # we require an exam id to load the formatted question
-    if not exam_id:
-        raise ValueError("Missing exam_id in vector-store attributes.")
-    
-    # 3. Load the formatted question
-    formatted_question = load_formatted_question_from_exam_and_question_number(
-        exam_id=exam_id,
-        question_number=question_number,
-    )
-
-    # 4. Return relative image paths (from metadata)
-    page_images = json.loads(attrs.get("page_images", "[]"))
-    figure_images = json.loads(attrs.get("figure_images", "[]"))
-
-    # return the result
+    # 3. Return vector store metadata (no formatting - that's another service's job)
     return {
-        "record_id": attrs.get("record_id"),
-        "exam_id": exam_id,
+        "record_id": attrs.record_id,
+        "exam_id": attrs.exam_id,
+        "question_number": attrs.question_number,
         "score": selected_result.get("score"),
-        "formatted": formatted_question.model_dump(mode="json"),
-        "page_images": page_images,
-        "figure_images": figure_images,
+        "page_images": attrs.get_page_images(),
+        "figure_images": attrs.get_figure_images(),
     }
 
 
@@ -135,7 +127,7 @@ def add_jsonl_questions_to_vector_store(
     )
     ```
     """
-    records = _load_question_records(jsonl_path)
+    records = QuestionRecord.from_jsonl(jsonl_path)
     add_question_records_to_vector_store(
         client=client,
         vector_store_id=vector_store_id,
@@ -158,38 +150,22 @@ def add_question_records_to_vector_store(
 
     Use this when you have question records in memory (or loaded from `.json` instead of `.jsonl`)
     and want to attach them to an existing vector store.
-
-    Example:
-    ```py
-    import json
-    from pathlib import Path
-    from exercise_finder.pydantic_models import QuestionRecord
-    from exercise_finder.services.vectorstore.main import add_question_records_to_vector_store
-
-    raw = json.loads(Path("questions.json").read_text(encoding="utf-8"))
-    records = [QuestionRecord.model_validate(obj) for obj in raw]
-    add_question_records_to_vector_store(
-        client=client,
-        vector_store_id="vs_...",
-        records=records,
-        dataset_name="vwo-2018-tv1",
-    )
-    ```
     """
-    if not records:
-        raise ValueError("No records provided.")
-
+    # create the index files directory
     out_dir = index_files_dir / dataset_name
-    id_to_path = _write_index_files(records, out_dir)
 
+    # write the index files
+    id_to_path = write_index_files(records, out_dir)
+
+    # upload the index files to OpenAI and add them to the vector store
     for record in records:
         file_path = id_to_path[record.id]
-        file_id = _save_file_to_openai(client=client, file_path=file_path)
-        _save_file_to_vector_store(
+        file_id = save_file_to_openai(client=client, file_path=file_path)
+        save_file_to_vector_store(
             client=client,
             vector_store_id=vector_store_id,
             file_id=file_id,
-            attributes=_attributes_from_record(record),
+            attributes=record.attributes_for_vector_store(),
         )
 
 

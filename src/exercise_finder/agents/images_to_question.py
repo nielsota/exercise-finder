@@ -65,7 +65,8 @@ Return a JSON object that matches this schema exactly:
 
 Rules:
 - Preserve wording as faithfully as possible (verbatim transcription).
-- The question title is often the first line of the question text. It should be included in the title field.
+- The question title is often the first line of the question text (may be in bold or standalone). Extract it and place it ONLY in the `title` field, NOT in the `question_text` field.
+- The `question_text` field should start with the content AFTER the title.
 - Keep line breaks/bullets where they carry meaning (subparts a/b/c, given/asked).
 - The provided images may contain a full multipart exercise; include ALL parts you can see in `question_text` (e.g. a/b/c or 1/2/3) in the original order.
 - Do not stop after the first part; continue until the last visible part in the images.

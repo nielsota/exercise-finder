@@ -50,3 +50,32 @@ def _fetch_from_ssm(parameter_name: str) -> str:
     response = ssm.get_parameter(Name=parameter_name, WithDecryption=True)
     return response["Parameter"]["Value"]
 
+
+def update_vector_store_id(new_id: str) -> None:
+    """
+    Update the vector store ID in AWS Parameter Store.
+    
+    Args:
+        new_id: The new vector store ID to set
+        
+    Raises:
+        ValueError: If USE_SSM is not enabled
+    """
+    use_ssm = os.environ.get("USE_SSM", "false").lower() == "true"
+    
+    if not use_ssm:
+        raise ValueError("Cannot update SSM parameter when USE_SSM is not enabled")
+    
+    import boto3  # type: ignore[import-not-found]
+    
+    ssm = boto3.client("ssm")
+    ssm.put_parameter(
+        Name="/exercise-finder/vector-store-id",
+        Value=new_id,
+        Type="String",
+        Overwrite=True,
+    )
+    
+    # Clear cache so next call fetches the new value
+    _get_vector_store_id_cached.cache_clear()
+

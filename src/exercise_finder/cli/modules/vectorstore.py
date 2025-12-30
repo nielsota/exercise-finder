@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+
 from pathlib import Path
 
 import typer  # type: ignore[import-not-found]
@@ -14,6 +15,7 @@ from exercise_finder.services.vectorstore.main import (
     search_vector_store,
 )
 from exercise_finder.services.format_questions.main import load_formatted_question_from_exam_and_question_number
+from exercise_finder.config import update_vector_store_id
 import exercise_finder.paths as paths
 from .utils import get_openai_client
 
@@ -24,11 +26,29 @@ app = typer.Typer(help="Vector store operations")
 @app.command("create")
 def create(
     name: str = typer.Option(..., "--name", help="Vector store name."),
+    update_id: bool = typer.Option(
+        False, 
+        "--update-id", 
+        help="Update the vector store ID in AWS Parameter Store (requires USE_SSM=true)"
+    ),
 ) -> None:
-    """Create a vector store. Returns the vector store ID for ingestion."""
+    """
+    Create a new vector store and optionally update the ID in AWS Parameter Store.
+    
+    Returns the vector store ID for use in subsequent commands.
+    """
     client = get_openai_client()
     vector_store_id = create_vector_store(client=client, name=name)
-    typer.echo(vector_store_id)
+    typer.echo(f"Created vector store: {vector_store_id}")
+    
+    if update_id:
+        try:
+            update_vector_store_id(vector_store_id)
+            typer.echo("✓ Updated AWS Parameter Store with new ID")
+        except ValueError as e:
+            typer.echo(f"⚠ Could not update Parameter Store: {e}", err=True)
+            typer.echo(f"You can manually set VECTOR_STORE_ID={vector_store_id}", err=True)
+        
 
 
 @app.command("add")

@@ -3,23 +3,10 @@ import json
 
 from loguru import logger
 
-from exercise_finder.pydantic_models import QuestionRecord
 from exercise_finder.enums import OpenAIModel
 from exercise_finder.agents.format_multipart import format_multipart_question
 from exercise_finder.pydantic_models import MultipartQuestionOutput
 
-
-
-def _load_question_records_from_jsonl(jsonl_path: Path) -> list[QuestionRecord]:
-    """Load question records from a JSONL file."""
-    records: list[QuestionRecord] = []
-    with jsonl_path.open("r", encoding="utf-8") as f:
-        for line in f: # type: ignore[attr-defined]
-            line = line.strip()
-            if not line:
-                continue
-            records.append(QuestionRecord.model_validate_json(line))
-    return records
 
 async def _format_question(
     *,

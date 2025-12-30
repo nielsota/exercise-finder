@@ -1,10 +1,16 @@
-"""Tests for Pydantic folder structure models."""
+"""Tests for Pydantic models."""
 import pytest  # type: ignore[import-not-found]
+import json
 from pathlib import Path
 
 from exercise_finder.pydantic_models import (  # type: ignore
+    FigureInfo,
+    QuestionFromImagesOutput,
+    QuestionRecord,
+    QuestionRecordVectorStoreAttributes,
     QuestionFolderStructure,
     ExamFolderStructure,
+    Exam,
 )
 from exercise_finder.enums import ExamLevel  # type: ignore
 
@@ -287,6 +293,7 @@ class TestExamFolderStructure:
         structure = ExamFolderStructure.from_exam_dir(exam_dir)
         
         # Test exam property
+        assert structure.exam.id == "VW-1025-a-18-1-o"
         assert structure.exam.level == ExamLevel.VWO
         assert structure.exam.year == 2018
         assert structure.exam.tijdvak == 1
@@ -301,4 +308,360 @@ class TestExamFolderStructure:
         # exam_dir should be an alias for root
         assert structure.exam_dir == structure.root
         assert structure.exam_dir == exam_dir
+
+
+class TestFigureInfo:
+    """Tests for FigureInfo model."""
+    
+    def test_figure_present(self):
+        """Test FigureInfo with figure present."""
+        fig = FigureInfo(present=True, description="A graph showing...")
+        
+        assert fig.present is True
+        assert fig.missing is False
+        assert fig.description == "A graph showing..."
+    
+    def test_figure_missing(self):
+        """Test FigureInfo with figure missing."""
+        fig = FigureInfo(present=False, missing=True)
+        
+        assert fig.present is False
+        assert fig.missing is True
+        assert fig.description is None
+    
+    def test_figure_default_missing(self):
+        """Test that missing defaults to False."""
+        fig = FigureInfo(present=True)
+        
+        assert fig.missing is False
+
+
+class TestQuestionFromImagesOutput:
+    """Tests for QuestionFromImagesOutput model."""
+    
+    def test_valid_output(self):
+        """Test valid question from images output."""
+        output = QuestionFromImagesOutput(
+            question_text="Bereken de waarde van x.",
+            title="Vergelijking oplossen",
+            figure=FigureInfo(present=True, description="Een grafiek")
+        )
+        
+        assert output.question_text == "Bereken de waarde van x."
+        assert output.title == "Vergelijking oplossen"
+        assert output.figure.present is True
+    
+    def test_no_figure(self):
+        """Test output with no figure."""
+        output = QuestionFromImagesOutput(
+            question_text="Wat is 2+2?",
+            title="Optellen",
+            figure=FigureInfo(present=False)
+        )
+        
+        assert output.figure.present is False
+        assert output.figure.description is None
+
+
+class TestQuestionRecord:
+    """Tests for QuestionRecord model."""
+    
+    def test_valid_record(self):
+        """Test creating a valid question record."""
+        exam = Exam(id="VW-1025-a-20-1-o", level=ExamLevel.VWO, year=2020, tijdvak=1)
+        record = QuestionRecord(
+            id="VW-1025-a-20-1-o_q01",
+            exam=exam,
+            title="Vergelijking oplossen",
+            question_number="1",
+            question_text="Bereken x.",
+            figure=FigureInfo(present=False),
+            source_images=["page1.png"],
+            page_images=["pages/page1.png"],
+            figure_images=[]
+        )
+        
+        assert record.id == "VW-1025-a-20-1-o_q01"
+        assert record.exam.id == "VW-1025-a-20-1-o"
+        assert record.exam.level == ExamLevel.VWO
+        assert record.title == "Vergelijking oplossen"
+        assert record.question_number == "1"
+    
+    def test_to_text_no_figure(self):
+        """Test converting record to text without figure."""
+        exam = Exam(id="VW-1025-a-20-1-o", level=ExamLevel.VWO, year=2020, tijdvak=1)
+        record = QuestionRecord(
+            id="test_id",
+            exam=exam,
+            title="Test Title",
+            question_number="1",
+            question_text="Test question text.",
+            figure=FigureInfo(present=False),
+            source_images=[]
+        )
+        
+        text = record.to_text()
+        assert "Test Title" in text
+        assert "Test question text." in text
+        assert "[FIGURE]" not in text
+    
+    def test_to_text_with_figure(self):
+        """Test converting record to text with figure."""
+        exam = Exam(id="VW-1025-a-20-1-o", level=ExamLevel.VWO, year=2020, tijdvak=1)
+        record = QuestionRecord(
+            id="test_id",
+            exam=exam,
+            title="Test Title",
+            question_number="1",
+            question_text="Test question text.",
+            figure=FigureInfo(present=True, description="A graph showing trends"),
+            source_images=[]
+        )
+        
+        text = record.to_text()
+        assert "Test Title" in text
+        assert "Test question text." in text
+        assert "[FIGURE]" in text
+        assert "A graph showing trends" in text
+    
+    def test_attributes_for_vector_store(self):
+        """Test converting record to vector store attributes."""
+        exam = Exam(id="VW-1025-a-20-1-o", level=ExamLevel.VWO, year=2020, tijdvak=1)
+        record = QuestionRecord(
+            id="VW-1025-a-20-1-o_q01",
+            exam=exam,
+            title="Test Title",
+            question_number="1",
+            question_text="Test text.",
+            figure=FigureInfo(present=True, missing=False),
+            source_images=["page1.png"],
+            page_images=["pages/page1.png"],
+            figure_images=["figures/fig1.png"]
+        )
+        
+        attrs = record.attributes_for_vector_store()
+        
+        assert attrs["record_id"] == "VW-1025-a-20-1-o_q01"
+        assert attrs["exam_id"] == "VW-1025-a-20-1-o"
+        assert attrs["exam_level"] == "VWO"
+        assert attrs["exam_year"] == "2020"
+        assert attrs["exam_tijdvak"] == "1"
+        assert attrs["question_number"] == "1"
+        assert attrs["figure_present"] == "True"
+        assert attrs["figure_missing"] == "False"
+        
+        # Check JSON fields
+        assert json.loads(attrs["page_images"]) == ["pages/page1.png"]
+        assert json.loads(attrs["figure_images"]) == ["figures/fig1.png"]
+        assert json.loads(attrs["source_images"]) == ["page1.png"]
+    
+    def test_from_jsonl_valid(self, tmp_path: Path):
+        """Test loading question records from valid JSONL file."""
+        exam = Exam(id="VW-1025-a-20-1-o", level=ExamLevel.VWO, year=2020, tijdvak=1)
+        record1 = QuestionRecord(
+            id="VW-1025-a-20-1-o_q01",
+            exam=exam,
+            title="Title 1",
+            question_number="1",
+            question_text="Question 1",
+            figure=FigureInfo(present=False),
+            source_images=[]
+        )
+        record2 = QuestionRecord(
+            id="VW-1025-a-20-1-o_q02",
+            exam=exam,
+            title="Title 2",
+            question_number="2",
+            question_text="Question 2",
+            figure=FigureInfo(present=True, description="Figure description"),
+            source_images=[]
+        )
+        
+        # Write JSONL file
+        jsonl_file = tmp_path / "VW-1025-a-20-1-o.jsonl"
+        with jsonl_file.open("w", encoding="utf-8") as f:
+            f.write(record1.model_dump_json() + "\n")
+            f.write(record2.model_dump_json() + "\n")
+        
+        # Load and validate
+        loaded_records = QuestionRecord.from_jsonl(jsonl_file)
+        
+        assert len(loaded_records) == 2
+        assert loaded_records[0].id == "VW-1025-a-20-1-o_q01"
+        assert loaded_records[0].title == "Title 1"
+        assert loaded_records[1].id == "VW-1025-a-20-1-o_q02"
+        assert loaded_records[1].figure.present is True
+    
+    def test_from_jsonl_file_not_found(self, tmp_path: Path):
+        """Test from_jsonl with non-existent file."""
+        jsonl_file = tmp_path / "nonexistent.jsonl"
+        
+        with pytest.raises(FileNotFoundError):
+            QuestionRecord.from_jsonl(jsonl_file)
+    
+    def test_from_jsonl_not_a_file(self, tmp_path: Path):
+        """Test from_jsonl with a directory instead of file."""
+        directory = tmp_path / "not_a_file"
+        directory.mkdir()
+        
+        with pytest.raises(ValueError, match="Path is not a file"):
+            QuestionRecord.from_jsonl(directory)
+    
+    def test_from_jsonl_wrong_extension(self, tmp_path: Path):
+        """Test from_jsonl with wrong file extension."""
+        wrong_file = tmp_path / "test.txt"
+        wrong_file.write_text("test")
+        
+        with pytest.raises(ValueError, match="must have .jsonl extension"):
+            QuestionRecord.from_jsonl(wrong_file)
+    
+    def test_from_jsonl_empty_file(self, tmp_path: Path):
+        """Test from_jsonl with empty file."""
+        jsonl_file = tmp_path / "empty.jsonl"
+        jsonl_file.write_text("")
+        
+        with pytest.raises(ValueError, match="contains no valid records"):
+            QuestionRecord.from_jsonl(jsonl_file)
+    
+    def test_from_jsonl_invalid_json(self, tmp_path: Path):
+        """Test from_jsonl with invalid JSON."""
+        jsonl_file = tmp_path / "invalid.jsonl"
+        jsonl_file.write_text("not valid json\n")
+        
+        with pytest.raises(ValueError, match="Invalid record at line 1"):
+            QuestionRecord.from_jsonl(jsonl_file)
+    
+    def test_from_jsonl_skips_blank_lines(self, tmp_path: Path):
+        """Test that from_jsonl skips blank lines."""
+        exam = Exam(id="VW-1025-a-20-1-o", level=ExamLevel.VWO, year=2020, tijdvak=1)
+        record = QuestionRecord(
+            id="VW-1025-a-20-1-o_q01",
+            exam=exam,
+            title="Title",
+            question_number="1",
+            question_text="Question",
+            figure=FigureInfo(present=False),
+            source_images=[]
+        )
+        
+        jsonl_file = tmp_path / "with_blanks.jsonl"
+        with jsonl_file.open("w", encoding="utf-8") as f:
+            f.write("\n")  # blank line
+            f.write(record.model_dump_json() + "\n")
+            f.write("\n")  # blank line
+        
+        loaded_records = QuestionRecord.from_jsonl(jsonl_file)
+        assert len(loaded_records) == 1
+
+
+class TestQuestionRecordVectorStoreAttributes:
+    """Tests for QuestionRecordVectorStoreAttributes model."""
+    
+    def test_valid_attributes(self):
+        """Test creating valid vector store attributes."""
+        attrs = QuestionRecordVectorStoreAttributes(
+            record_id="VW-1025-a-20-1-o_q01",
+            exam_id="VW-1025-a-20-1-o",
+            exam_level="vwo",
+            exam_year="2020",
+            exam_tijdvak="1",
+            question_number="1",
+            page_images='["pages/page1.png"]',
+            figure_images='["figures/fig1.png"]',
+            source_images='["page1.png"]',
+            figure_present="True",
+            figure_missing="False"
+        )
+        
+        assert attrs.record_id == "VW-1025-a-20-1-o_q01"
+        assert attrs.exam_id == "VW-1025-a-20-1-o"
+        assert attrs.question_number == "1"
+    
+    def test_get_page_images(self):
+        """Test parsing page_images JSON string."""
+        attrs = QuestionRecordVectorStoreAttributes(
+            record_id="test",
+            exam_id="test",
+            exam_level="vwo",
+            exam_year="2020",
+            exam_tijdvak="1",
+            question_number="1",
+            page_images='["pages/page1.png", "pages/page2.png"]',
+            figure_images='[]',
+            source_images='[]',
+            figure_present="False",
+            figure_missing="False"
+        )
+        
+        page_images = attrs.get_page_images()
+        assert page_images == ["pages/page1.png", "pages/page2.png"]
+    
+    def test_get_figure_images(self):
+        """Test parsing figure_images JSON string."""
+        attrs = QuestionRecordVectorStoreAttributes(
+            record_id="test",
+            exam_id="test",
+            exam_level="vwo",
+            exam_year="2020",
+            exam_tijdvak="1",
+            question_number="1",
+            page_images='[]',
+            figure_images='["figures/fig1.png"]',
+            source_images='[]',
+            figure_present="True",
+            figure_missing="False"
+        )
+        
+        figure_images = attrs.get_figure_images()
+        assert figure_images == ["figures/fig1.png"]
+    
+    def test_get_source_images(self):
+        """Test parsing source_images JSON string."""
+        attrs = QuestionRecordVectorStoreAttributes(
+            record_id="test",
+            exam_id="test",
+            exam_level="vwo",
+            exam_year="2020",
+            exam_tijdvak="1",
+            question_number="1",
+            page_images='[]',
+            figure_images='[]',
+            source_images='["page1.png", "page2.png", "page3.png"]',
+            figure_present="False",
+            figure_missing="False"
+        )
+        
+        source_images = attrs.get_source_images()
+        assert source_images == ["page1.png", "page2.png", "page3.png"]
+    
+    def test_model_validate_from_dict(self):
+        """Test using model_validate with a dictionary (as from vector store)."""
+        attrs_dict = {
+            "record_id": "VW-1025-a-20-1-o_q01",
+            "exam_id": "VW-1025-a-20-1-o",
+            "exam_level": "vwo",
+            "exam_year": "2020",
+            "exam_tijdvak": "1",
+            "question_number": "1",
+            "page_images": '["pages/page1.png"]',
+            "figure_images": '[]',
+            "source_images": '["page1.png"]',
+            "figure_present": "True",
+            "figure_missing": "False"
+        }
+        
+        attrs = QuestionRecordVectorStoreAttributes.model_validate(attrs_dict)
+        
+        assert attrs.record_id == "VW-1025-a-20-1-o_q01"
+        assert attrs.get_page_images() == ["pages/page1.png"]
+    
+    def test_missing_required_field(self):
+        """Test that model_validate raises error for missing required fields."""
+        attrs_dict = {
+            "record_id": "test",
+            # Missing exam_id and other required fields
+        }
+        
+        with pytest.raises(Exception):  # Pydantic ValidationError
+            QuestionRecordVectorStoreAttributes.model_validate(attrs_dict)
 

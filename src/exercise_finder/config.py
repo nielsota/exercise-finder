@@ -46,7 +46,8 @@ def _fetch_from_ssm(parameter_name: str) -> str:
     """Fetch a parameter from AWS Systems Manager Parameter Store."""
     import boto3  # type: ignore[import-not-found]
     
-    ssm = boto3.client("ssm")
+    # Use us-east-1 region where the parameter is stored
+    ssm = boto3.client("ssm", region_name="us-east-1")
     response = ssm.get_parameter(Name=parameter_name, WithDecryption=True)
     return response["Parameter"]["Value"]
 
@@ -68,7 +69,8 @@ def update_vector_store_id(new_id: str) -> None:
     
     import boto3  # type: ignore[import-not-found]
     
-    ssm = boto3.client("ssm")
+    # Use us-east-1 region where the parameter is stored
+    ssm = boto3.client("ssm", region_name="us-east-1")
     ssm.put_parameter(
         Name="/mathwizard-vector-store-id",
         Value=new_id,

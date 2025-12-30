@@ -14,6 +14,20 @@ from exercise_finder.pydantic_models import Exam
 app = typer.Typer(help="Extract questions from images")
 
 
+def _process_exam_images(
+    exam_dir: Path,
+    out_path: Path | None = None,
+    model: OpenAIModel = OpenAIModel.GPT_4O,
+) -> None:
+    """Internal helper to process exam images. Can be called programmatically."""
+    # default to data/questions-extracted/<exam-dir-name>.jsonl
+    if out_path is None:
+        out_path = paths.questions_extracted_jsonl(exam_dir.name)
+
+    # process the exam
+    process_exam(exam_dir=exam_dir, out_path=out_path, model=model)
+
+
 @app.command("from-images")
 def from_images(
     exam_dir: Path = typer.Option(
@@ -38,13 +52,7 @@ def from_images(
     ),
 ) -> None:
     """Convert structured image directory into JSONL (one record per qNN folder)."""
-
-    # default to data/questions-extracted/<exam-dir-name>.jsonl
-    if out_path is None:
-        out_path = paths.questions_extracted_jsonl(exam_dir.name)
-
-    # process the exam
-    process_exam(exam_dir=exam_dir, out_path=out_path, model=model)
+    _process_exam_images(exam_dir=exam_dir, out_path=out_path, model=model)
 
 
 @app.command("refresh-all")
@@ -65,8 +73,9 @@ def refresh_all(
         
         # Only process directories that match exam naming pattern
         try:
-            Exam.from_file_path(Path(f"{exam_dir.name}.pdf")) # use exam class to validate the exam directory
-            from_images(exam_dir=exam_dir)
+            Exam.from_file_path(Path(f"{exam_dir.name}.pdf"))  # use exam class to validate the exam directory
+            typer.echo(f"Processing exam directory: {exam_dir.name}")
+            _process_exam_images(exam_dir=exam_dir)
         except (ValueError, KeyError, IndexError):
             # Skip directories that don't match exam pattern (e.g., "template")
             typer.echo(f"Skipping non-exam directory: {exam_dir.name}")

@@ -17,6 +17,7 @@ app.add_typer(ui.app, name="ui")
 app.add_typer(extract.app, name="extract")
 app.add_typer(format.app, name="format")
 app.add_typer(vectorstore.app, name="vectorstore")
+app.add_typer(vectorstore.app, name="vs")  # Shorthand alias
 
 
 def main() -> None:

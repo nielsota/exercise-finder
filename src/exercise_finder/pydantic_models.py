@@ -271,11 +271,17 @@ class QuestionFolderStructure(BaseModel):
     def validate_only_png_images(self) -> "QuestionFolderStructure":
         """Validate that only PNG images exist in the pages and figures directories."""
         
+        # Files to ignore (system/hidden files)
+        ignored_files = {".DS_Store", ".gitkeep", "Thumbs.db", "desktop.ini"}
+        
         # validate only png images exist in the pages directory; never null
         # but still include the check so other validators can check that the directory exists
         if self.pages:
             pages_dir = self.pages[0].parent
-            non_png_pages = [f for f in pages_dir.iterdir() if f.is_file() and f.suffix.lower() != ".png"]
+            non_png_pages = [
+                f for f in pages_dir.iterdir() 
+                if f.is_file() and f.suffix.lower() != ".png" and f.name not in ignored_files
+            ]
             if non_png_pages:
                 raise ValueError(
                     f"Non-PNG files found in pages directory: {[f.name for f in non_png_pages]}"
@@ -284,7 +290,10 @@ class QuestionFolderStructure(BaseModel):
         # validate only png images exist in the figures directory
         if self.figures:
             figures_dir = self.figures[0].parent
-            non_png_figures = [f for f in figures_dir.iterdir() if f.is_file() and f.suffix.lower() != ".png"]
+            non_png_figures = [
+                f for f in figures_dir.iterdir() 
+                if f.is_file() and f.suffix.lower() != ".png" and f.name not in ignored_files
+            ]
             if non_png_figures:
                 raise ValueError(
                     f"Non-PNG files found in figures directory: {[f.name for f in non_png_figures]}"

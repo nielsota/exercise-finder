@@ -22,7 +22,10 @@ Output a JSON object matching this schema exactly:
 Rules:
 - `title` is the question title. It should be included in the title field.
 - `stem` contains only the shared setup/context before the first subpart.
-- `parts` contains each subpart in order; preserve wording and any points annotations (e.g. '4p').
+- `parts` contains each subpart in order:
+  - Extract the points value into the `points` field (e.g., '4p' → points: 4, '3 punten' → points: 3)
+  - If no points are specified, use 0
+  - The `text` field should contain the question text without the points annotation
 - If there are no explicit subparts, put the entire text into `stem` and set `parts` to an empty list.
 - Preserve ALL LaTeX delimiters exactly as given: \\( ... \\), \\[ ... \\], $ ... $, $$ ... $$.
 - Do not solve the problem.

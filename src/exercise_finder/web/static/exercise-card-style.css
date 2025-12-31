@@ -105,6 +105,17 @@ body {
   margin-bottom: 0;
 }
 
+/* Question parts (a, b, c) */
+.question-parts {
+  margin: 12px 0 0 0;
+  padding-left: 24px;
+}
+
+.question-parts li {
+  margin: 8px 0;
+  padding-left: 8px;
+}
+
 /* Footer section */
 .card-footer {
   padding: 16px 20px;

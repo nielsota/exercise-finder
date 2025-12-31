@@ -45,6 +45,14 @@
     
     <div class="question-text">
       {{ exercise.question_text | safe }}
+      
+      {% if exercise.parts %}
+        <ol class="question-parts" type="a">
+          {% for part in exercise.parts %}
+            <li>{{ part | safe }}</li>
+          {% endfor %}
+        </ol>
+      {% endif %}
     </div>
   </div>
 

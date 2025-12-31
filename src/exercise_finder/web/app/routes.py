@@ -40,27 +40,42 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
             {
                 "number": 1,
                 "exam_id": "TRIG-2024-UC-01",
-                "title": "Basis: Sinus in het eerste kwadrant",
-                "question_text": r"Los de vergelijking \(\sin(x) = \frac{1}{2}\) op voor \(0 \leq x \leq 2\pi\). Geef alle oplossingen exact in radialen.",
-                "max_marks": 3,
+                "title": "Basis: Sinus vergelijkingen",
+                "question_text": r"Los de volgende vergelijkingen op voor \(0 \leq x \leq 2\pi\). Geef alle oplossingen exact in radialen.",
+                "parts": [
+                    r"\(\sin(x) = \frac{1}{2}\)",
+                    r"\(\sin(x) = \frac{\sqrt{3}}{2}\)",
+                    r"\(\sin(x) = \frac{\sqrt{2}}{2}\)"
+                ],
+                "max_marks": 6,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png"]
             },
             {
                 "number": 2,
                 "exam_id": "TRIG-2024-UC-02",
-                "title": "Symmetrie: Negatieve waarde",
-                "question_text": r"Los de vergelijking \(\sin(x) = -\frac{1}{2}\) op voor \(0 \leq x \leq 2\pi\). Leg uit hoe je de symmetrie van de eenheidscirkel gebruikt om alle oplossingen te vinden.",
-                "max_marks": 4,
+                "title": "Symmetrie: Negatieve waarden",
+                "question_text": r"Los de volgende vergelijkingen op voor \(0 \leq x \leq 2\pi\). Leg bij elk onderdeel uit welke symmetrie je gebruikt.",
+                "parts": [
+                    r"\(\sin(x) = -\frac{1}{2}\)",
+                    r"\(\cos(x) = -\frac{1}{2}\)",
+                    r"\(\sin(x) = -\frac{\sqrt{3}}{2}\)"
+                ],
+                "max_marks": 9,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png"]
             },
             {
                 "number": 3,
                 "exam_id": "TRIG-2024-UC-03",
-                "title": "Cosinus: Horizontale symmetrie",
-                "question_text": r"Los de vergelijking \(\cos(x) = \frac{\sqrt{3}}{2}\) op voor \(0 \leq x \leq 2\pi\). Beschrijf de symmetrie-as die je gebruikt om de tweede oplossing te vinden.",
-                "max_marks": 4,
+                "title": "Cosinus vergelijkingen",
+                "question_text": r"Los de volgende vergelijkingen op voor \(0 \leq x \leq 2\pi\).",
+                "parts": [
+                    r"\(\cos(x) = \frac{\sqrt{3}}{2}\)",
+                    r"\(\cos(x) = \frac{1}{2}\)",
+                    r"\(\cos(x) = 0\)"
+                ],
+                "max_marks": 6,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png"]
             },
@@ -68,8 +83,12 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
                 "number": 4,
                 "exam_id": "TRIG-2024-UC-04",
                 "title": "Uitgebreid interval: Periodiciteit",
-                "question_text": r"Los de vergelijking \(\sin(x) = \frac{\sqrt{2}}{2}\) op voor \(0 \leq x \leq 4\pi\). Leg uit hoe periodiciteit van de sinusfunctie je helpt om alle vier de oplossingen te vinden.",
-                "max_marks": 5,
+                "question_text": r"Los de volgende vergelijkingen op voor \(0 \leq x \leq 4\pi\). Leg uit hoe periodiciteit je helpt.",
+                "parts": [
+                    r"\(\sin(x) = \frac{\sqrt{2}}{2}\)",
+                    r"\(\cos(x) = \frac{\sqrt{2}}{2}\)"
+                ],
+                "max_marks": 8,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png", "sine-graph.png"]
             },
@@ -77,26 +96,41 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
                 "number": 5,
                 "exam_id": "TRIG-2024-UC-05",
                 "title": "Kwadrantenanalyse",
-                "question_text": r"Los de vergelijking \(\cos(x) = -\frac{1}{2}\) op voor \(0 \leq x \leq 2\pi\). Bepaal eerst in welke kwadranten cosinus negatief is, en gebruik dan symmetrie.",
-                "max_marks": 5,
+                "question_text": r"Bepaal eerst in welke kwadranten de functie negatief is, los dan de vergelijkingen op voor \(0 \leq x \leq 2\pi\).",
+                "parts": [
+                    r"\(\cos(x) = -\frac{1}{2}\)",
+                    r"\(\sin(x) = -\frac{\sqrt{2}}{2}\)",
+                    r"\(\cos(x) = -\frac{\sqrt{3}}{2}\)"
+                ],
+                "max_marks": 9,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png"]
             },
             {
                 "number": 6,
                 "exam_id": "TRIG-2024-UC-06",
-                "title": "Smal interval: Beperkte oplossingen",
-                "question_text": r"Los de vergelijking \(\sin(x) = \frac{\sqrt{3}}{2}\) op voor \(0 \leq x \leq \pi\). Leg uit waarom er slechts één oplossing is in dit interval.",
-                "max_marks": 3,
+                "title": "Verschillende intervallen",
+                "question_text": r"Los de vergelijking \(\sin(x) = \frac{\sqrt{3}}{2}\) op voor de volgende intervallen:",
+                "parts": [
+                    r"\(0 \leq x \leq \pi\)",
+                    r"\(0 \leq x \leq 2\pi\)",
+                    r"\(0 \leq x \leq 4\pi\)"
+                ],
+                "max_marks": 6,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png"]
             },
             {
                 "number": 7,
                 "exam_id": "TRIG-2024-UC-07",
-                "title": "Bijzondere waarden: Grensgevallen",
-                "question_text": r"Los de vergelijking \(\sin(x) = 1\) op voor \(0 \leq x \leq 4\pi\). Hoeveel oplossingen zijn er? Waarom ligt dit getal lager dan bij andere opgaven?",
-                "max_marks": 4,
+                "title": "Bijzondere waarden",
+                "question_text": r"Los de volgende vergelijkingen op voor \(0 \leq x \leq 4\pi\). Let op: dit zijn grensgevallen!",
+                "parts": [
+                    r"\(\sin(x) = 1\)",
+                    r"\(\cos(x) = 1\)",
+                    r"\(\sin(x) = -1\)"
+                ],
+                "max_marks": 6,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png"]
             },
@@ -104,8 +138,13 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
                 "number": 8,
                 "exam_id": "TRIG-2024-UC-08",
                 "title": "Synthese: Alle symmetrieën",
-                "question_text": r"Los de vergelijking \(\cos(x) = -\frac{\sqrt{2}}{2}\) op voor \(0 \leq x \leq 4\pi\). Beschrijf stap voor stap welke symmetrieën en periodiciteit je gebruikt.",
-                "max_marks": 6,
+                "question_text": r"Los de volgende vergelijkingen op voor \(0 \leq x \leq 4\pi\). Beschrijf bij elk onderdeel welke symmetrieën en periodiciteit je gebruikt.",
+                "parts": [
+                    r"\(\cos(x) = -\frac{\sqrt{2}}{2}\)",
+                    r"\(\sin(x) = -\frac{1}{2}\)",
+                    r"\(\cos(x) = \frac{1}{2}\)"
+                ],
+                "max_marks": 12,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png", "cosine-graph.png"]
             }

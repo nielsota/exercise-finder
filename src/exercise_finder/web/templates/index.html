@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="nl">
   <!-- head contains the page setup and styling -->
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Exercise Finder</title>
+    <title>Examenopgaven zoeken - MathWizard</title>
+    <link rel="stylesheet" href="/static/header-style.css" />
     <link rel="stylesheet" href="/static/styles.css" />
     <!-- MathJax config MUST come before the MathJax script -->
     <script>
@@ -21,12 +22,14 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script> 
   </head>
   <body>
-    <header>
-      <h1>Exercise Finder</h1>
-      <p class="muted">Search your vector store, fetch full text, format multipart, and show images.</p>
-    </header>
+    {% from "macros/_header.html" import mathwizard_header %}
+    {{ mathwizard_header() }}
 
-    <main>
+    <main style="max-width: 900px; margin: 0 auto; padding: 20px;">
+      <header style="margin-bottom: 32px;">
+        <h1 style="font-size: 36px; font-weight: 700; color: #032254; margin: 0 0 8px 0;">Examenopgaven zoeken</h1>
+        <p class="muted">Zoek in je vector store, haal volledige tekst op, formatteer meerdelige vragen en toon afbeeldingen.</p>
+      </header>
       <section class="card">
         <div class="row">
           <button id="bestBtn">Best</button>

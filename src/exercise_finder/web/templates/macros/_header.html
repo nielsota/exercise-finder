@@ -1,0 +1,41 @@
+{#
+  MathWizard Header Macro
+
+  Usage:
+    {% from "macros/_header.html" import mathwizard_header %}
+    {{ mathwizard_header() }}
+#}
+
+{% macro mathwizard_header() %}
+<header class="main-header">
+  <div class="header-container">
+    <!-- Logo + Brand -->
+    <a href="/" class="brand">
+      <img src="/static/logo.svg" alt="MathWizard" class="logo">
+      <span class="brand-name">MathWizard</span>
+    </a>
+
+    <!-- Navigation -->
+    <nav class="main-nav">
+      <!-- Practice Topics Dropdown -->
+      <div class="nav-item dropdown">
+        <button class="nav-link dropdown-toggle">
+          Oefen onderwerpen
+          <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="dropdown-menu">
+          <a href="/exercises" class="dropdown-item">Eenheidscirkel</a>
+          <a href="/derivatives" class="dropdown-item">Afgeleiden</a>
+          <span class="dropdown-item disabled">Meer komt later...</span>
+        </div>
+      </div>
+
+      <!-- Exam Question Finder -->
+      <a href="/" class="nav-link">Examenopgaven zoeken</a>
+    </nav>
+  </div>
+</header>
+{% endmacro %}
+

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Oefenopgaven - MathWizard</title>
+  <link rel="stylesheet" href="/static/header-style.css">
   <link rel="stylesheet" href="/static/exercise-card-style.css">
   
   <!-- MathJax config MUST come before the MathJax script -->
@@ -53,6 +54,9 @@
   </style>
 </head>
 <body>
+  {% from "macros/_header.html" import mathwizard_header %}
+  {{ mathwizard_header() }}
+  
   <div class="container">
     <header class="page-header">
       <h1 class="page-title">Oefenopgaven Eenheidscirkel</h1>

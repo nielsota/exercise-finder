@@ -150,8 +150,10 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
             }
         ]
         
-        return templates.TemplateResponse("unitcircle.html", {
+        return templates.TemplateResponse("practice.html", {
             "request": request,
+            "page_title": "Oefenopgaven Eenheidscirkel",
+            "page_subtitle": "Leer symmetrieën en periodiciteit door goniometrische vergelijkingen op te lossen",
             "exercises": exercises
         })
 
@@ -304,8 +306,10 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
             }
         ]
         
-        return templates.TemplateResponse("derivatives.html", {
+        return templates.TemplateResponse("practice.html", {
             "request": request,
+            "page_title": "Oefenopgaven Afgeleiden",
+            "page_subtitle": "Leer differentiëren met machtsregel, productregel, quotiëntregel en kettingregel",
             "exercises": exercises
         })
 

@@ -1,0 +1,73 @@
+{#
+  Exercise Card Simple Macro
+
+  Usage:
+    {% from "macros/_exercise_card_simple.html" import exercise_card_simple %}
+    {{ exercise_card_simple(exercise) }}
+
+  Parameters:
+    - exercise: dict with keys:
+      - number: int
+      - exam_id: str
+      - title: str
+      - question_text: str
+      - max_marks: int (optional)
+      - calculator_allowed: bool
+      - figure_images: list (optional)
+#}
+
+{% macro exercise_card_simple(exercise) %}
+<article class="exercise-card">
+  <!-- Top section: Question number + calculator badge -->
+  <header class="card-header">
+    <h3 class="card-title">Opgave {{ exercise.number }}</h3>
+    
+    <div class="card-badges">
+      {% if exercise.calculator_allowed %}
+        <span class="badge badge-calculator">Rekenmachine</span>
+      {% else %}
+        <span class="badge badge-no-calculator">Zonder rekenmachine</span>
+      {% endif %}
+    </div>
+  </header>
+
+  <hr class="card-divider">
+
+  <!-- Middle section: Question content -->
+  <div class="card-body">
+    {% if exercise.max_marks %}
+      <p class="question-meta">[Maximaal {{ exercise.max_marks }} punt{{ 'en' if exercise.max_marks != 1 else '' }}]</p>
+    {% endif %}
+    
+    {% if exercise.title %}
+      <h4 class="question-title">{{ exercise.title }}</h4>
+    {% endif %}
+    
+    <div class="question-text">
+      {{ exercise.question_text | safe }}
+      
+      {% if exercise.parts %}
+        <ol class="question-parts" type="a">
+          {% for part in exercise.parts %}
+            <li>{{ part | safe }}</li>
+          {% endfor %}
+        </ol>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if exercise.figure_images %}
+    <hr class="card-divider">
+    
+    <!-- Bottom section: Figures link -->
+    <div class="card-footer">
+      <a class="figure-link" href="/figures/{{ exercise.exam_id }}/{{ exercise.number }}">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2m2 10H3v4c0 1.1.9 2 2 2h4v-2H5zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2" fill="currentColor"/>
+        </svg>
+        Bekijk {{ exercise.figure_images|length }} figur{{ 'en' if exercise.figure_images|length != 1 else 'ur' }}
+      </a>
+    </div>
+  {% endif %}
+</article>
+{% endmacro %}

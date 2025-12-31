@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oefenopgaven Afgeleiden - MathWizard</title>
+  <link rel="stylesheet" href="/static/header-style.css">
+  <link rel="stylesheet" href="/static/exercise-card-style.css">
+  
+  <!-- MathJax config MUST come before the MathJax script -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)'], ['$', '$']],
+        displayMath: [['\\[', '\\]'], ['$$', '$$']]
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .page-header {
+      margin-bottom: 32px;
+    }
+    
+    .page-title {
+      font-size: 36px;
+      font-weight: 700;
+      color: #032254;
+      margin: 0 0 8px 0;
+    }
+    
+    .page-subtitle {
+      font-size: 16px;
+      color: #6b7280;
+      margin: 0;
+    }
+    
+    .exercise-list {
+      display: grid;
+      gap: 20px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  {% from "macros/_header.html" import mathwizard_header %}
+  {{ mathwizard_header() }}
+  
+  <div class="container">
+    <header class="page-header">
+      <h1 class="page-title">Oefenopgaven Afgeleiden</h1>
+      <p class="page-subtitle">Leer differentiëren met machtsregel, productregel, quotiëntregel en kettingregel</p>
+    </header>
+    
+    <div class="exercise-list">
+      {% from "macros/_exercise_card_simple.html" import exercise_card_simple %}
+      
+      {% if exercises %}
+        {% for exercise in exercises %}
+          {{ exercise_card_simple(exercise) }}
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <p>Geen oefenopgaven beschikbaar.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
+

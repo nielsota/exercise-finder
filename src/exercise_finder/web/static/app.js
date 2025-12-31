@@ -85,7 +85,7 @@ async function run(mode, payloadOverride = null) {
   try {
 
     // here we fetch the data from the api
-    const resp = await fetch("/api/fetch", {
+    const resp = await fetch("/api/v1/fetch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

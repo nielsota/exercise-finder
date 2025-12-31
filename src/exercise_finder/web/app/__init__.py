@@ -18,6 +18,7 @@ from exercise_finder.config import get_vector_store_id
 from exercise_finder.constants import SESSION_EXPIRATION_SECONDS
 from .auth import NotAuthenticatedException, create_auth_router
 from .routes import create_main_router
+from .api.v1 import create_v1_router
 
 
 def create_app(
@@ -74,10 +75,12 @@ def create_app(
 
     # Include routers
     auth_router = create_auth_router(templates=templates)
-    main_router = create_main_router(templates=templates, exams_root=exams_root)
+    main_router = create_main_router(templates=templates)
+    v1_router = create_v1_router(exams_root=exams_root)
     
     app.include_router(auth_router)
     app.include_router(main_router)
+    app.include_router(v1_router)
 
     return app
 

@@ -29,5 +29,12 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
         """
         return templates.TemplateResponse("index.html", {"request": request})
 
+    @router.get("/exercises", response_class=HTMLResponse)
+    async def exercises(request: Request, authenticated: bool = Depends(require_authentication)) -> HTMLResponse:
+        """
+        Render the exercises page.
+        """
+        return templates.TemplateResponse("exercises.html", {"request": request})
+
     return router
 

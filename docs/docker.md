@@ -22,26 +22,56 @@ This project uses Docker for both local development and production deployment. U
 
 ### Local Development
 
+**Quick Start** (using helper scripts):
+
+```bash
+# Start dev environment with hot-reload
+./scripts/dev_deploy.sh
+
+# Rebuild image and start fresh
+./scripts/dev_deploy.sh --rebuild
+
+# View logs (if not already following)
+./scripts/dev_logs.sh
+
+# Stop the environment
+./scripts/dev_stop.sh
+```
+
+**Manual Docker Compose** (same result):
+
 ```bash
 # Start the app with hot-reload
-docker-compose up
+docker compose up
 
-# What happens:
-# 1. Reads docker-compose.yml
-# 2. Builds image using Dockerfile
-# 3. Adds dev features:
-#    - Hot reload (code changes auto-restart)
-#    - Volume mounts (live code updates)
-#    - Loads .env.prod file
-#    - Mounts ~/.aws for SSM access
-# 4. Runs on http://localhost:8000
+# Stop the app
+docker compose down
+
+# Follow logs
+docker compose logs -f
 ```
+
+**What happens during dev start:**
+1. Reads docker-compose.yml
+2. Builds image using Dockerfile
+3. Adds dev features:
+   - Hot reload (code changes auto-restart)
+   - Volume mounts (live code updates)
+   - Loads .env.prod file
+   - Mounts ~/.aws for SSM access
+4. Runs on http://localhost:8000
 
 **Development Features** (from `docker-compose.yml`):
 - `--reload --reload-dir /app/src` - Auto-restart on code changes
 - `./src:/app/src:ro` - Live code updates without rebuild
 - `./data:/app/data:ro` - Access to local data files
 - `~/.aws:/root/.aws:ro` - AWS credentials for SSM access
+
+**Example Dev Workflow:**
+1. Start: `./scripts/dev_deploy.sh`
+2. Edit code in `src/exercise_finder/web/app/routes.py`
+3. Save file → uvicorn auto-restarts → refresh browser
+4. Stop: `Ctrl+C` or `./scripts/dev_stop.sh`
 
 ### Production Deployment
 

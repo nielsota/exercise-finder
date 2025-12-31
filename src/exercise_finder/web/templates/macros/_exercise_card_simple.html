@@ -20,7 +20,7 @@
 <article class="exercise-card">
   <!-- Top section: Question number + calculator badge -->
   <header class="card-header">
-    <h3 class="card-title">Question {{ exercise.number }}</h3>
+    <h3 class="card-title">Opgave {{ exercise.number }}</h3>
     
     <div class="card-badges">
       {% if exercise.calculator_allowed %}
@@ -44,7 +44,7 @@
     {% endif %}
     
     <div class="question-text">
-      {{ exercise.question_text }}
+      {{ exercise.question_text | safe }}
     </div>
   </div>
 

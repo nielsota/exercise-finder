@@ -41,7 +41,7 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
                 "number": 1,
                 "exam_id": "TRIG-2024-UC-01",
                 "title": "Basis: Sinus in het eerste kwadrant",
-                "question_text": "Los de vergelijking sin(x) = ½ op voor 0 ≤ x ≤ 2π. Geef alle oplossingen exact in radialen.",
+                "question_text": r"Los de vergelijking \(\sin(x) = \frac{1}{2}\) op voor \(0 \leq x \leq 2\pi\). Geef alle oplossingen exact in radialen.",
                 "max_marks": 3,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png"]
@@ -50,7 +50,7 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
                 "number": 2,
                 "exam_id": "TRIG-2024-UC-02",
                 "title": "Symmetrie: Negatieve waarde",
-                "question_text": "Los de vergelijking sin(x) = -½ op voor 0 ≤ x ≤ 2π. Leg uit hoe je de symmetrie van de eenheidscirkel gebruikt om alle oplossingen te vinden.",
+                "question_text": r"Los de vergelijking \(\sin(x) = -\frac{1}{2}\) op voor \(0 \leq x \leq 2\pi\). Leg uit hoe je de symmetrie van de eenheidscirkel gebruikt om alle oplossingen te vinden.",
                 "max_marks": 4,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png"]
@@ -59,7 +59,7 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
                 "number": 3,
                 "exam_id": "TRIG-2024-UC-03",
                 "title": "Cosinus: Horizontale symmetrie",
-                "question_text": "Los de vergelijking cos(x) = √3/2 op voor 0 ≤ x ≤ 2π. Beschrijf de symmetrie-as die je gebruikt om de tweede oplossing te vinden.",
+                "question_text": r"Los de vergelijking \(\cos(x) = \frac{\sqrt{3}}{2}\) op voor \(0 \leq x \leq 2\pi\). Beschrijf de symmetrie-as die je gebruikt om de tweede oplossing te vinden.",
                 "max_marks": 4,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png"]
@@ -68,7 +68,7 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
                 "number": 4,
                 "exam_id": "TRIG-2024-UC-04",
                 "title": "Uitgebreid interval: Periodiciteit",
-                "question_text": "Los de vergelijking sin(x) = √2/2 op voor 0 ≤ x ≤ 4π. Leg uit hoe periodiciteit van de sinusfunctie je helpt om alle vier de oplossingen te vinden.",
+                "question_text": r"Los de vergelijking \(\sin(x) = \frac{\sqrt{2}}{2}\) op voor \(0 \leq x \leq 4\pi\). Leg uit hoe periodiciteit van de sinusfunctie je helpt om alle vier de oplossingen te vinden.",
                 "max_marks": 5,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png", "sine-graph.png"]
@@ -77,7 +77,7 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
                 "number": 5,
                 "exam_id": "TRIG-2024-UC-05",
                 "title": "Kwadrantenanalyse",
-                "question_text": "Los de vergelijking cos(x) = -½ op voor 0 ≤ x ≤ 2π. Bepaal eerst in welke kwadranten cosinus negatief is, en gebruik dan symmetrie.",
+                "question_text": r"Los de vergelijking \(\cos(x) = -\frac{1}{2}\) op voor \(0 \leq x \leq 2\pi\). Bepaal eerst in welke kwadranten cosinus negatief is, en gebruik dan symmetrie.",
                 "max_marks": 5,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png"]
@@ -86,7 +86,7 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
                 "number": 6,
                 "exam_id": "TRIG-2024-UC-06",
                 "title": "Smal interval: Beperkte oplossingen",
-                "question_text": "Los de vergelijking sin(x) = √3/2 op voor 0 ≤ x ≤ π. Leg uit waarom er slechts één oplossing is in dit interval.",
+                "question_text": r"Los de vergelijking \(\sin(x) = \frac{\sqrt{3}}{2}\) op voor \(0 \leq x \leq \pi\). Leg uit waarom er slechts één oplossing is in dit interval.",
                 "max_marks": 3,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png"]
@@ -95,7 +95,7 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
                 "number": 7,
                 "exam_id": "TRIG-2024-UC-07",
                 "title": "Bijzondere waarden: Grensgevallen",
-                "question_text": "Los de vergelijking sin(x) = 1 op voor 0 ≤ x ≤ 4π. Hoeveel oplossingen zijn er? Waarom ligt dit getal lager dan bij andere opgaven?",
+                "question_text": r"Los de vergelijking \(\sin(x) = 1\) op voor \(0 \leq x \leq 4\pi\). Hoeveel oplossingen zijn er? Waarom ligt dit getal lager dan bij andere opgaven?",
                 "max_marks": 4,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png"]
@@ -104,7 +104,7 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
                 "number": 8,
                 "exam_id": "TRIG-2024-UC-08",
                 "title": "Synthese: Alle symmetrieën",
-                "question_text": "Los de vergelijking cos(x) = -√2/2 op voor 0 ≤ x ≤ 4π. Beschrijf stap voor stap welke symmetrieën en periodiciteit je gebruikt.",
+                "question_text": r"Los de vergelijking \(\cos(x) = -\frac{\sqrt{2}}{2}\) op voor \(0 \leq x \leq 4\pi\). Beschrijf stap voor stap welke symmetrieën en periodiciteit je gebruikt.",
                 "max_marks": 6,
                 "calculator_allowed": False,
                 "figure_images": ["unit-circle.png", "cosine-graph.png"]

@@ -45,7 +45,8 @@ def create_app(
         exams_root = Path(exams_root_str)
     
     exams_root = exams_root.resolve()
-    web_dir = Path(__file__).resolve().parent
+    # web_dir is now the parent of the app folder (exercise_finder/web)
+    web_dir = Path(__file__).resolve().parent.parent
 
     app = FastAPI(title="Exercise Finder", version="0.1.0")
     
@@ -89,3 +90,4 @@ def app_factory() -> FastAPI:
     Used by: uvicorn exercise_finder.web.app:app_factory --factory
     """
     return create_app()
+

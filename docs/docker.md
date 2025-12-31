@@ -57,7 +57,7 @@ docker compose logs -f
 3. Adds dev features:
    - Hot reload (code changes auto-restart)
    - Volume mounts (live code updates)
-   - Loads .env.prod file
+   - Loads .env file (local development config)
    - Mounts ~/.aws for SSM access
 4. Runs on http://localhost:8000
 
@@ -115,7 +115,7 @@ docker push <ecr-repo-url>:latest
 
 ## Environment Variables
 
-### Local Development (.env.prod)
+### Local Development (.env)
 ```bash
 # Required
 OPENAI_API_KEY=sk-proj-...

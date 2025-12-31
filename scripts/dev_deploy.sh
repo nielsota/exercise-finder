@@ -4,9 +4,9 @@ set -e
 echo "🚀 Starting local development environment with hot-reload..."
 echo ""
 
-# Check if .env.prod exists
-if [ ! -f .env.prod ]; then
-    echo "⚠️  Warning: .env.prod not found. Create it from .env.example"
+# Check if .env exists
+if [ ! -f .env ]; then
+    echo "⚠️  Warning: .env not found. Create it from .env.example"
     echo ""
 fi
 

@@ -29,7 +29,7 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
         """
         return templates.TemplateResponse("index.html", {"request": request})
 
-    @router.get("/unitcircle", response_class=HTMLResponse)
+    @router.get("/practice/unitcircle", response_class=HTMLResponse)
     async def unitcircle(request: Request, authenticated: bool = Depends(require_authentication)) -> HTMLResponse:
         """
         Render the unit circle exercises page.
@@ -155,92 +155,92 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
             "exercises": exercises
         })
 
-    @router.get("/derivatives", response_class=HTMLResponse)
+    @router.get("/practice/derivatives", response_class=HTMLResponse)
     async def derivatives(request: Request, authenticated: bool = Depends(require_authentication)) -> HTMLResponse:
         """
         Render the derivatives exercises page.
         """
-        # Derivative practice questions
+        # Derivative practice questions - challenging, no hints
         exercises = [
             {
                 "number": 1,
                 "exam_id": "CALC-2024-DRV-01",
-                "title": "Basis: Machtsfuncties",
-                "question_text": r"Bepaal de afgeleide van de volgende functies. Gebruik de machtsregel.",
+                "title": "Machtsfuncties",
+                "question_text": r"Bepaal de afgeleide van de volgende functies.",
                 "parts": [
-                    r"\(f(x) = x^3\)",
-                    r"\(g(x) = x^5\)",
-                    r"\(h(x) = x^{10}\)"
+                    r"\(f(x) = 3x^7 - 2x^5 + x^3\)",
+                    r"\(g(x) = \frac{2}{x^3} + \frac{5}{x^2}\)",
+                    r"\(h(x) = 4\sqrt[3]{x^2} - 3\sqrt{x}\)"
                 ],
-                "max_marks": 3,
+                "max_marks": 9,
                 "calculator_allowed": False,
                 "figure_images": []
             },
             {
                 "number": 2,
                 "exam_id": "CALC-2024-DRV-02",
-                "title": "Constanten en coëfficiënten",
+                "title": "Goniometrische functies I",
                 "question_text": r"Bepaal de afgeleide van de volgende functies.",
                 "parts": [
-                    r"\(f(x) = 5x^2\)",
-                    r"\(g(x) = -3x^4\)",
-                    r"\(h(x) = \frac{1}{2}x^6\)"
+                    r"\(f(x) = x^3\sin(x)\)",
+                    r"\(g(x) = \cos(x) - x\sin(x)\)",
+                    r"\(h(x) = \frac{\sin(x)}{x^2}\)"
                 ],
-                "max_marks": 3,
+                "max_marks": 9,
                 "calculator_allowed": False,
                 "figure_images": []
             },
             {
                 "number": 3,
                 "exam_id": "CALC-2024-DRV-03",
-                "title": "Somregel",
-                "question_text": r"Bepaal de afgeleide van de volgende functies. Pas de somregel toe.",
+                "title": "Kettingregel I",
+                "question_text": r"Bepaal de afgeleide van de volgende functies.",
                 "parts": [
-                    r"\(f(x) = x^2 + x^3\)",
-                    r"\(g(x) = 2x^4 - 3x^2 + 5\)",
-                    r"\(h(x) = x^5 - 4x^3 + 2x - 7\)"
+                    r"\(f(x) = (3x^2 - 4x + 1)^5\)",
+                    r"\(g(x) = \sqrt{x^3 + 2x}\)",
+                    r"\(h(x) = \frac{1}{(x^2 + 1)^3}\)"
                 ],
-                "max_marks": 6,
+                "max_marks": 9,
                 "calculator_allowed": False,
                 "figure_images": []
             },
             {
                 "number": 4,
                 "exam_id": "CALC-2024-DRV-04",
-                "title": "Negatieve exponenten",
-                "question_text": r"Bepaal de afgeleide. Herschrijf eerst als macht met negatieve exponent.",
+                "title": "Goniometrische functies II",
+                "question_text": r"Bepaal de afgeleide van de volgende functies.",
                 "parts": [
-                    r"\(f(x) = \frac{1}{x}\)",
-                    r"\(g(x) = \frac{1}{x^2}\)",
-                    r"\(h(x) = \frac{3}{x^4}\)"
+                    r"\(f(x) = \sin(3x^2)\)",
+                    r"\(g(x) = \cos^2(x)\)",
+                    r"\(h(x) = \sin(x)\cos(x)\)"
                 ],
-                "max_marks": 6,
+                "max_marks": 9,
                 "calculator_allowed": False,
                 "figure_images": []
             },
             {
                 "number": 5,
                 "exam_id": "CALC-2024-DRV-05",
-                "title": "Wortelfuncties",
-                "question_text": r"Bepaal de afgeleide. Herschrijf eerst als macht met gebroken exponent.",
+                "title": "Quotiëntregel",
+                "question_text": r"Bepaal de afgeleide van de volgende functies.",
                 "parts": [
-                    r"\(f(x) = \sqrt{x}\)",
-                    r"\(g(x) = \sqrt[3]{x}\)",
-                    r"\(h(x) = 2\sqrt{x} + \frac{1}{\sqrt{x}}\)"
+                    r"\(f(x) = \frac{x^2 - 1}{x^2 + 1}\)",
+                    r"\(g(x) = \frac{2x}{\sqrt{x^2 + 4}}\)",
+                    r"\(h(x) = \frac{\sin(x)}{1 + \cos(x)}\)"
                 ],
-                "max_marks": 6,
+                "max_marks": 12,
                 "calculator_allowed": False,
                 "figure_images": []
             },
             {
                 "number": 6,
                 "exam_id": "CALC-2024-DRV-06",
-                "title": "Productregel",
-                "question_text": r"Bepaal de afgeleide met de productregel: \((uv)' = u'v + uv'\).",
+                "title": "Exponentiële en logaritmische functies",
+                "question_text": r"Bepaal de afgeleide van de volgende functies.",
                 "parts": [
-                    r"\(f(x) = x^2 \cdot x^3\) (vereenvoudig eerst!)",
-                    r"\(g(x) = (x + 1)(x - 2)\) (vermenigvuldig eerst!)",
-                    r"\(h(x) = x^2(3x^2 - 4x + 1)\)"
+                    r"\(f(x) = xe^x\)",
+                    r"\(g(x) = e^{x^2}\)",
+                    r"\(h(x) = \ln(x^2 + 1)\)"
                 ],
                 "max_marks": 9,
                 "calculator_allowed": False,
@@ -249,26 +249,26 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
             {
                 "number": 7,
                 "exam_id": "CALC-2024-DRV-07",
-                "title": "Quotiëntregel",
-                "question_text": r"Bepaal de afgeleide met de quotiëntregel: \(\left(\frac{u}{v}\right)' = \frac{u'v - uv'}{v^2}\).",
+                "title": "Kettingregel II",
+                "question_text": r"Bepaal de afgeleide van de volgende functies.",
                 "parts": [
-                    r"\(f(x) = \frac{x^2}{x + 1}\)",
-                    r"\(g(x) = \frac{x - 1}{x + 1}\)",
-                    r"\(h(x) = \frac{2x^2 + 3}{x^2 - 1}\)"
+                    r"\(f(x) = \sin^3(2x)\)",
+                    r"\(g(x) = e^{\sin(x)}\)",
+                    r"\(h(x) = \ln(\cos(x))\)"
                 ],
-                "max_marks": 9,
+                "max_marks": 12,
                 "calculator_allowed": False,
                 "figure_images": []
             },
             {
                 "number": 8,
                 "exam_id": "CALC-2024-DRV-08",
-                "title": "Kettingregel",
-                "question_text": r"Bepaal de afgeleide met de kettingregel: \(\frac{d}{dx}f(g(x)) = f'(g(x)) \cdot g'(x)\).",
+                "title": "Tangens en cotangens",
+                "question_text": r"Bepaal de afgeleide van de volgende functies.",
                 "parts": [
-                    r"\(f(x) = (x^2 + 1)^3\)",
-                    r"\(g(x) = (2x - 1)^5\)",
-                    r"\(h(x) = \sqrt{x^2 + 4}\)"
+                    r"\(f(x) = \tan(x)\)",
+                    r"\(g(x) = x\tan(x)\)",
+                    r"\(h(x) = \tan(x^2 + 1)\)"
                 ],
                 "max_marks": 9,
                 "calculator_allowed": False,
@@ -277,28 +277,28 @@ def create_main_router(templates: Jinja2Templates) -> APIRouter:
             {
                 "number": 9,
                 "exam_id": "CALC-2024-DRV-09",
-                "title": "Goniometrische functies",
-                "question_text": r"Bepaal de afgeleide. Gebruik \(\frac{d}{dx}\sin(x) = \cos(x)\) en \(\frac{d}{dx}\cos(x) = -\sin(x)\).",
+                "title": "Gemengde opgaven I",
+                "question_text": r"Bepaal de afgeleide van de volgende functies.",
                 "parts": [
-                    r"\(f(x) = \sin(x) + \cos(x)\)",
-                    r"\(g(x) = 3\sin(x) - 2\cos(x)\)",
-                    r"\(h(x) = x^2\sin(x)\) (gebruik productregel)"
+                    r"\(f(x) = x^2e^{-x}\)",
+                    r"\(g(x) = \frac{\ln(x)}{x}\)",
+                    r"\(h(x) = \sqrt{\sin(x) + \cos(x)}\)"
                 ],
-                "max_marks": 9,
+                "max_marks": 12,
                 "calculator_allowed": False,
                 "figure_images": []
             },
             {
                 "number": 10,
                 "exam_id": "CALC-2024-DRV-10",
-                "title": "Synthese: Gemengde opgaven",
-                "question_text": r"Bepaal de afgeleide. Gebruik de juiste regels en vereenvoudig je antwoord.",
+                "title": "Gemengde opgaven II",
+                "question_text": r"Bepaal de afgeleide van de volgende functies.",
                 "parts": [
-                    r"\(f(x) = (x^2 + 1)(x^3 - 2x)\)",
-                    r"\(g(x) = \frac{x^2}{\sqrt{x}}\) (vereenvoudig eerst!)",
-                    r"\(h(x) = \sin(x^2 + 1)\) (gebruik kettingregel)"
+                    r"\(f(x) = \frac{e^x}{\sin(x)}\)",
+                    r"\(g(x) = \ln(x^2 + \sqrt{x})\)",
+                    r"\(h(x) = (x^2 + 1)^3(x - 2)^2\)"
                 ],
-                "max_marks": 12,
+                "max_marks": 15,
                 "calculator_allowed": False,
                 "figure_images": []
             }

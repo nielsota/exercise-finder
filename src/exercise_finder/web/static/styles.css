@@ -1,19 +1,152 @@
-:root { color-scheme: light dark; }
-body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; max-width: 1000px; }
-textarea { width: 100%; min-height: 110px; padding: 10px; font-size: 14px; }
-button { padding: 10px 14px; font-size: 14px; cursor: pointer; }
-input[type="number"] { width: 64px; margin-left: 6px; }
-header { margin-bottom: 12px; }
-main { display: grid; gap: 14px; }
-.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.mt { margin-top: 10px; }
-.mt-sm { margin-top: 8px; }
-.muted { opacity: 0.8; font-size: 13px; }
-.card { border: 1px solid rgba(127,127,127,0.35); border-radius: 12px; padding: 14px; }
-.stem { white-space: pre-wrap; }
-.parts li { margin: 6px 0; white-space: pre-wrap; }
-.imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 10px; margin-top: 10px; }
-.imgs img { width: 100%; height: auto; border-radius: 10px; border: 1px solid rgba(127,127,127,0.35); }
-.error { color: #b00020; white-space: pre-wrap; }
-.pill { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(127,127,127,0.35); font-size: 12px; }
+:root { 
+  color-scheme: light dark; 
+}
 
+body { 
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Buttons - match figure link style */
+button {
+  padding: 10px 16px;
+  background: #f0f7ff;
+  border: 1px solid #cfe0ff;
+  border-radius: 10px;
+  color: #0066cc;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background: #e0efff;
+  border-color: #acd0ff;
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Textarea - contained within card */
+textarea { 
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 120px;
+  padding: 12px;
+  font-size: 15px;
+  font-family: inherit;
+  border: 1px solid #e6e8ef;
+  border-radius: 8px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+/* Input number */
+input[type="number"] { 
+  width: 80px;
+  padding: 8px 12px;
+  border: 1px solid #e6e8ef;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+input[type="number"]:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+/* Layout */
+main { 
+  display: grid;
+  gap: 20px;
+}
+
+.row { 
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.mt { 
+  margin-top: 16px;
+}
+
+.mt-sm { 
+  margin-top: 12px;
+}
+
+.muted { 
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Card - match exercise card style */
+.card { 
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid #e6e8ef;
+  box-shadow: rgba(0, 129, 214, 0.16) 0px 0px 24px 0px;
+  margin-bottom: 20px;
+}
+
+/* Results display */
+.stem { 
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.parts li { 
+  margin: 8px 0;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.imgs { 
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.imgs img { 
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid #e6e8ef;
+}
+
+.error { 
+  color: #dc2626;
+  white-space: pre-wrap;
+  padding: 12px;
+  background: #fef2f2;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+}
+
+.pill { 
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid #e6e8ef;
+  font-size: 12px;
+  background: #f9fafb;
+  color: #6b7280;
+  font-weight: 500;
+}

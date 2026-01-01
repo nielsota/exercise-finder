@@ -99,11 +99,11 @@ def questions_extracted_dir() -> Path:
     return data_dir() / QUESTIONS_EXTRACTED_DIRNAME
 
 
-def questions_extracted_jsonl(exam_id: str) -> Path:
+def questions_extracted_yaml(exam_id: str) -> Path:
     """
-    Path to the extracted QuestionRecord JSONL for an exam.
+    Path to the extracted QuestionRecord YAML for an exam.
     """
-    return questions_extracted_dir() / f"{exam_id}.jsonl"
+    return questions_extracted_dir() / f"{exam_id}.yaml"
 
 
 def questions_formatted_dir() -> Path:
@@ -119,9 +119,9 @@ def formatted_exam_dir(exam_id: str) -> Path:
 
 def formatted_question_path(exam_id: str, question_number: str) -> Path:
     """
-    Path to a pre-formatted multipart question JSON file.
+    Path to a pre-formatted multipart question YAML file.
     """
-    return formatted_exam_dir(exam_id) / f"q{question_number}.json"
+    return formatted_exam_dir(exam_id) / f"q{question_number}.yaml"
 
 
 def vectorstore_index_dir() -> Path:
@@ -140,3 +140,23 @@ def vectorstore_index_file_path(dataset_name: str, record_id: str) -> Path:
     Path to a single per-question index .txt file (before upload).
     """
     return vectorstore_dataset_dir(dataset_name) / f"{record_id}.txt"
+
+
+# Practice exercises paths
+PRACTICE_EXERCISES_DIRNAME = "practice-exercises"
+
+
+def practice_exercises_dir() -> Path:
+    """Directory containing practice exercise topic directories."""
+    return questions_formatted_dir() / PRACTICE_EXERCISES_DIRNAME
+
+
+def practice_exercise_dir(topic: str) -> Path:
+    """
+    Path to a practice exercise topic directory.
+    
+    Example:
+        practice_exercise_dir("unitcircle") 
+        -> data/questions-formatted/practice-exercises/unitcircle/
+    """
+    return practice_exercises_dir() / topic

@@ -1,7 +1,7 @@
 """Extract questions from structured exam image directories."""
 from __future__ import annotations
 
-import json
+import yaml  # type: ignore[import-untyped]
 from pathlib import Path
 import asyncio
 
@@ -76,9 +76,9 @@ async def process_question(
     )
 
 
-async def process_exam_dir(*, exam_dir: Path, out_path: Path, model: OpenAIModel) -> None:
+async def process_exam_dir(*, exam_dir: Path, out_dir: Path, model: OpenAIModel) -> None:
     """
-    Process an exam directory of per-question images into question JSONL.
+    Process an exam directory of per-question images into question YAML files.
     
     Expected folder structure:
         data/questions-images/<EXAM_STEM>/
@@ -93,54 +93,64 @@ async def process_exam_dir(*, exam_dir: Path, out_path: Path, model: OpenAIModel
               page3.png
     
     Output:
-        Writes JSONL to `out_path` with one `QuestionRecord` per `qNN/` directory.
-        Each record includes:
+        Writes one YAML file per question to `out_dir/<exam-id>/q<N>.yaml`.
+        Each file contains a single `QuestionRecord` with:
         - `question_text`: verbatim transcription of all parts visible in the images
         - `page_images`/`figure_images`: relative paths (relative to `exam_dir`)
     
     Example:
         >>> exam_dir = Path("data/questions-images/VW-1025-a-18-1-o")
-        >>> out_path = Path("data/questions-extracted/VW-1025-a-18-1-o.jsonl")
+        >>> out_dir = Path("data/questions-extracted")
         >>> await process_exam_dir(
         ...     exam_dir=exam_dir,
-        ...     out_path=out_path,
+        ...     out_dir=out_dir,
         ...     model=OpenAIModel.GPT_4O,
         ... )
-        # Creates out_path with one JSON line per question
+        # Creates out_dir/VW-1025-a-18-1-o/q1.yaml, q2.yaml, etc.
     """
-    # Create output directory
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    logger.info("Writing JSONL to {out_path}", out_path=out_path)
-
     # Validate and load exam structure
     exam = ExamFolderStructure.from_exam_dir(exam_dir)
     logger.info("Found {n} questions", n=len(exam.questions))
     
+    # Create exam output directory
+    exam_out_dir = out_dir / exam.exam.id
+    exam_out_dir.mkdir(parents=True, exist_ok=True)
+    logger.info("Writing YAML files to {out_dir}", out_dir=exam_out_dir)
+    
     # Process each question with progress bar
     with create_progress_bar(f"Processing {exam.name}", total=len(exam.questions)) as (progress, task):
-        with out_path.open("w", encoding="utf-8") as f:
-            for question in exam.questions:
-                try:
-                    record = await process_question(
-                        question=question,
-                        exam=exam,
-                        model=model,
+        for question in exam.questions:
+            try:
+                record = await process_question(
+                    question=question,
+                    exam=exam,
+                    model=model,
+                )
+                
+                # Write individual YAML file for this question
+                question_file = exam_out_dir / f"q{record.question_number}.yaml"
+                with question_file.open("w", encoding="utf-8") as f:
+                    yaml.dump(
+                        record.model_dump(mode="json"),
+                        f,
+                        allow_unicode=True,
+                        default_flow_style=False
                     )
-                    f.write(json.dumps(record.model_dump(mode="json"), ensure_ascii=False) + "\n")
-                    progress.update(task, advance=1, description=f"✓ {exam.name} - q{record.question_number}")
-                except ValueError as e:
-                    logger.warning("Skipping {question}: {error}", question=question.number, error=e)
-                    progress.update(task, advance=1, description=f"⚠ {exam.name} - {question.number} (skipped)")
-                    continue
+                
+                progress.update(task, advance=1, description=f"✓ {exam.name} - q{record.question_number}")
+            except ValueError as e:
+                logger.warning("Skipping {question}: {error}", question=question.number, error=e)
+                progress.update(task, advance=1, description=f"⚠ {exam.name} - {question.number} (skipped)")
+                continue
 
 
-def process_exam(*, exam_dir: Path, out_path: Path, model: OpenAIModel) -> None:
+def process_exam(*, exam_dir: Path, out_dir: Path, model: OpenAIModel) -> None:
     """
     CLI entry point: Process exam directory synchronously.
     
     Args:
         exam_dir: Path to exam directory
-        out_path: Output JSONL path
+        out_dir: Output directory for YAML files
         model: OpenAI model to use
     """
-    asyncio.run(process_exam_dir(exam_dir=exam_dir, out_path=out_path, model=model))
+    asyncio.run(process_exam_dir(exam_dir=exam_dir, out_dir=out_dir, model=model))

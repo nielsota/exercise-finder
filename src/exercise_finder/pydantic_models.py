@@ -5,8 +5,9 @@ from pathlib import Path
 import re
 import json
 from typing import Any
+import yaml # type: ignore[import-untyped]
 
-from pydantic import BaseModel, model_validator # type: ignore
+from pydantic import BaseModel, ConfigDict, model_validator # type: ignore
 
 from exercise_finder.constants import pdf_acronym_to_level_mapping
 from exercise_finder.enums import ExamLevel
@@ -88,35 +89,122 @@ class QuestionRecord(BaseModel):
     figure_images: list[str] | None = None
 
     @classmethod
-    def from_jsonl(cls, jsonl_path: Path) -> list["QuestionRecord"]:
-        """Load question records from a JSONL file."""
-
-        # validate the jsonl file
-        if not jsonl_path.exists():
-            raise FileNotFoundError(f"JSONL file not found: {jsonl_path}")
+    def from_yaml(cls, yaml_path: Path) -> list["QuestionRecord"]:
+        """
+        Load question records from a YAML file.
         
-        if not jsonl_path.is_file():
-            raise ValueError(f"Path is not a file: {jsonl_path}")
+        YAML file should contain a list of QuestionRecord objects.
         
-        # Validate file extension
-        if jsonl_path.suffix.lower() != ".jsonl":
-            raise ValueError(f"File must have .jsonl extension, got: {jsonl_path.suffix}")
+        Validates:
+        - File exists and is a .yaml file
+        - Filename matches exam naming convention
+        - All records belong to the same exam
+        
+        Example:
+            records = QuestionRecord.from_yaml(Path("data/questions-extracted/VW-1025-a-18-1-o.yaml"))
+        """
+        import yaml  # type: ignore[import-untyped]
+        
+        # Validate file exists
+        if not yaml_path.exists():
+            raise FileNotFoundError(f"YAML file not found: {yaml_path}")
+        
+        if not yaml_path.is_file():
+            raise ValueError(f"Path is not a file: {yaml_path}")
+        
+        # Validate extension
+        if yaml_path.suffix != ".yaml":
+            raise ValueError(f"File must have .yaml extension, got: {yaml_path.suffix}")
+        
+        # Validate filename pattern matches exam naming
+        exam = Exam.from_file_path(yaml_path)
         
         # Load and validate records
-        records: list[QuestionRecord] = []
-        with jsonl_path.open("r", encoding="utf-8") as f:
-            for line_num, line in enumerate(f, start=1):
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    records.append(cls.model_validate_json(line))
-                except Exception as e:
-                    raise ValueError(f"Invalid record at line {line_num}: {e}") from e
+        with open(yaml_path) as f:
+            data = yaml.safe_load(f)
         
-        # Validate file is not empty
-        if not records:
-            raise ValueError(f"JSONL file contains no valid records: {jsonl_path}")
+        if not data:
+            raise ValueError(f"YAML file is empty: {yaml_path}")
+        
+        if not isinstance(data, list):
+            raise ValueError(f"YAML file must contain a list of records, got: {type(data)}")
+        
+        # Parse all records
+        records = []
+        for i, item in enumerate(data):
+            try:
+                records.append(cls.model_validate(item))
+            except Exception as e:
+                raise ValueError(f"Invalid record at index {i}: {e}")
+        
+        # Validate all records belong to same exam
+        exam_ids = {record.exam.id for record in records}
+        if len(exam_ids) > 1:
+            raise ValueError(f"All records must belong to same exam. Found: {exam_ids}")
+        
+        expected_exam_id = exam.id
+        if records[0].exam.id != expected_exam_id:
+            raise ValueError(
+                f"Exam ID mismatch. Filename suggests '{expected_exam_id}', "
+                f"but records have '{records[0].exam.id}'"
+            )
+        
+        return records
+
+    @classmethod
+    def from_exam_dir(cls, exam_dir: Path) -> list["QuestionRecord"]:
+        """
+        Load question records from an exam directory containing individual YAML files.
+        
+        Each YAML file contains a single QuestionRecord object (e.g., q1.yaml, q2.yaml).
+        
+        Validates:
+        - Directory exists and contains .yaml files
+        - Directory name matches exam naming convention
+        - All records belong to the same exam
+        
+        Example:
+            records = QuestionRecord.from_exam_dir(Path("data/questions-extracted/VW-1025-a-18-1-o/"))
+        """
+        import yaml  # type: ignore[import-untyped]
+        
+        # Validate directory exists
+        if not exam_dir.exists():
+            raise FileNotFoundError(f"Exam directory not found: {exam_dir}")
+        
+        if not exam_dir.is_dir():
+            raise ValueError(f"Path is not a directory: {exam_dir}")
+        
+        # Validate directory name matches exam naming
+        exam = Exam.from_file_path(exam_dir)
+        
+        # Load all YAML files in the directory
+        yaml_files = sorted(exam_dir.glob("*.yaml"))
+        if not yaml_files:
+            raise ValueError(f"No YAML files found in {exam_dir}")
+        
+        # Parse all records
+        records = []
+        for yaml_file in yaml_files:
+            with yaml_file.open("r") as f:
+                data = yaml.safe_load(f)
+                try:
+                    record = cls.model_validate(data)
+                    records.append(record)
+                except Exception as e:
+                    raise ValueError(f"Invalid record in {yaml_file.name}: {e}")
+        
+        # Validate all records belong to same exam
+        exam_ids = {record.exam.id for record in records}
+        if len(exam_ids) > 1:
+            raise ValueError(f"All records must belong to same exam. Found: {exam_ids}")
+        
+        expected_exam_id = exam.id
+        if records[0].exam.id != expected_exam_id:
+            raise ValueError(
+                f"Exam ID mismatch. Directory suggests '{expected_exam_id}', "
+                f"but records have '{records[0].exam.id}'"
+            )
         
         return records
 
@@ -177,15 +265,186 @@ class QuestionRecordVectorStoreAttributes(BaseModel):
 
 
 class MultipartQuestionPart(BaseModel):
-    label: str
-    points: int
+    """A single part of a multipart question."""
     text: str
+    label: str | None = None  # Auto-generated (a, b, c) if None
+    points: int = 0
+    
+    model_config = ConfigDict(extra="forbid")
 
 
-class MultipartQuestionOutput(BaseModel):
+class AgentMultipartQuestionOutput(BaseModel):
+    """
+    Agent output for multipart question formatting.
+    
+    This is what the LLM agent returns - ONLY the formatted text content.
+    The agent's job is to parse question text into structured parts (title, stem, parts).
+    
+    Metadata like exam_id, calculator_allowed, and image paths are NOT generated
+    by the agent - they are added afterward from QuestionRecord.
+    
+    Use MultipartQuestionOutput (which extends this) for the full model with metadata.
+    """
     title: str
     stem: str
     parts: list[MultipartQuestionPart]
+    
+    model_config = ConfigDict(extra="forbid")
+    
+    @model_validator(mode="after")
+    def auto_generate_part_labels(self) -> "AgentMultipartQuestionOutput":
+        """Auto-generate labels (a, b, c) for parts without explicit labels."""
+        for i, part in enumerate(self.parts):
+            if part.label is None:
+                part.label = chr(ord('a') + i)
+        return self
+
+
+class MultipartQuestionOutput(AgentMultipartQuestionOutput):
+    """
+    Complete multipart question model with metadata.
+    
+    This extends AgentMultipartQuestionOutput by adding metadata fields that are
+    NOT generated by the LLM agent:
+    - exam_id, calculator_allowed: Question metadata
+    - page_images, figure_images: Forwarded from QuestionRecord
+    
+    Used for:
+    - Storing formatted questions (YAML files)
+    - Practice exercises
+    - Vectorstore operations
+    - Web display
+    """
+    # Optional metadata (not generated by agent)
+    exam_id: str | None = None
+    calculator_allowed: bool | None = None
+    
+    # Image paths (forwarded from QuestionRecord, not agent-generated)
+    page_images: list[str] = []
+    figure_images: list[str] = []
+    
+    model_config = ConfigDict(extra="forbid")
+    
+    @property
+    def max_marks(self) -> int:
+        """Computed property: sum of all part points."""
+        return sum(part.points for part in self.parts)
+
+
+class PracticeExerciseMetadata(BaseModel):
+    """Metadata for a practice exercise set."""
+    title: str
+    subtitle: str
+    
+    @classmethod
+    def load_from_yaml(cls, yaml_path: Path) -> "PracticeExerciseMetadata":
+        """Load metadata from _meta.yaml file."""
+        if not yaml_path.exists():
+            raise FileNotFoundError(f"Metadata file not found: {yaml_path}")
+        
+        with yaml_path.open("r") as f:
+            data = yaml.safe_load(f)
+        
+        return cls.model_validate(data)
+
+
+class PracticeExerciseSet(BaseModel):
+    """Collection of practice exercises for a topic."""
+    topic: str
+    title: str
+    subtitle: str
+    exercises: list[MultipartQuestionOutput]
+    
+    def __add__(self, other: "PracticeExerciseSet") -> "PracticeExerciseSet":
+        """
+        Combine two PracticeExerciseSets.
+        
+        Validates that topic, title, and subtitle match before combining.
+        Returns a new PracticeExerciseSet with combined exercises.
+        """
+        if not isinstance(other, PracticeExerciseSet):
+            raise TypeError(f"Cannot add PracticeExerciseSet with {type(other)}")
+        
+        if self.topic != other.topic:
+            raise ValueError(f"Cannot combine different topics: {self.topic} != {other.topic}")
+        
+        if self.title != other.title:
+            raise ValueError(f"Cannot combine different titles: {self.title} != {other.title}")
+        
+        if self.subtitle != other.subtitle:
+            raise ValueError(f"Cannot combine different subtitles: {self.subtitle} != {other.subtitle}")
+        
+        return PracticeExerciseSet(
+            topic=self.topic,
+            title=self.title,
+            subtitle=self.subtitle,
+            exercises=self.exercises + other.exercises,
+        )
+    
+    @classmethod
+    def load_from_yaml(cls, yaml_path: Path) -> "PracticeExerciseSet":
+        """Load exercise set from YAML file with validation."""
+        with open(yaml_path) as f:
+            data = yaml.safe_load(f)
+        return cls.model_validate(data)
+    
+    @classmethod
+    def load_from_directory(cls, topic_dir: Path) -> "PracticeExerciseSet":
+        """
+        Load practice exercises from a directory of individual YAML files.
+        
+        Directory structure:
+            data/practice-exercises/unitcircle/
+              ├── p1.yaml
+              ├── p2.yaml
+              └── ...
+        
+        Each file contains a single MultipartQuestionOutput.
+        The directory name is used as the topic slug.
+        
+        Returns a PracticeExerciseSet with exercises loaded in sorted order.
+        
+        Example:
+            exercise_set = PracticeExerciseSet.load_from_directory(
+                Path("data/practice-exercises/unitcircle/")
+            )
+        """
+        # Validate directory exists
+        if not topic_dir.exists():
+            raise FileNotFoundError(f"Topic directory not found: {topic_dir}")
+        
+        if not topic_dir.is_dir():
+            raise ValueError(f"Path is not a directory: {topic_dir}")
+        
+        # Use directory name as topic
+        topic = topic_dir.name
+            
+        # Load metadata
+        metadata = PracticeExerciseMetadata.load_from_yaml(topic_dir / "_meta.yaml")
+
+        # Load all practice YAML files (p*.yaml) and combine them
+        yaml_files = sorted(topic_dir.glob("p*.yaml"))
+        if not yaml_files:
+            raise ValueError(f"No practice exercise files found in {topic_dir}")
+        
+        # Load each file and add to the result
+        exercises = []
+        for yaml_file in yaml_files:
+            try:
+                # Load each file as a single-exercise set (each file contains one MultipartQuestionOutput)
+                with yaml_file.open("r") as f:
+                    data = yaml.safe_load(f)
+                    exercises.append(MultipartQuestionOutput.model_validate(data))
+                
+            except Exception as e:
+                raise ValueError(f"Invalid exercise in {yaml_file.name}: {e}")
+        
+        return cls(
+            topic=topic,
+            title=metadata.title,
+            subtitle=metadata.subtitle,
+            exercises=exercises,
+        )
 
 
 ########################################################

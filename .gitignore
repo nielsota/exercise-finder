@@ -15,3 +15,9 @@ data/
 # environment variables
 .env
 .env.*
+
+# Backups
+backups/
+
+# MAC OS files
+.DS_Store

@@ -15,16 +15,16 @@ app = typer.Typer(help="Extract questions from images")
 
 def _process_exam_images(
     exam_dir: Path,
-    out_path: Path | None = None,
+    out_dir: Path | None = None,
     model: OpenAIModel = OpenAIModel.GPT_4O,
 ) -> None:
     """Internal helper to process exam images. Can be called programmatically."""
-    # default to data/questions-extracted/<exam-dir-name>.jsonl
-    if out_path is None:
-        out_path = paths.questions_extracted_jsonl(exam_dir.name)
+    # default to data/questions-extracted/
+    if out_dir is None:
+        out_dir = paths.questions_extracted_dir()
 
     # process the exam
-    process_exam(exam_dir=exam_dir, out_path=out_path, model=model)
+    process_exam(exam_dir=exam_dir, out_dir=out_dir, model=model)
 
 
 @app.command("from-images")
@@ -38,10 +38,10 @@ def from_images(
         readable=True,
         help="Exam directory with qNN/pages/*.png and optional qNN/figures/*.png.",
     ),
-    out_path: Path | None = typer.Option(
+    out_dir: Path | None = typer.Option(
         None,
-        "--out-path",
-        help="Output JSONL path",
+        "--out-dir",
+        help="Output directory for YAML files (default: data/questions-extracted/)",
     ),
     model: OpenAIModel = typer.Option(
         OpenAIModel.GPT_4O,
@@ -50,8 +50,8 @@ def from_images(
         case_sensitive=False,
     ),
 ) -> None:
-    """Convert structured image directory into JSONL (one record per qNN folder)."""
-    _process_exam_images(exam_dir=exam_dir, out_path=out_path, model=model)
+    """Convert structured image directory into YAML files (one YAML per question)."""
+    _process_exam_images(exam_dir=exam_dir, out_dir=out_dir, model=model)
 
 
 @app.command("refresh-all")

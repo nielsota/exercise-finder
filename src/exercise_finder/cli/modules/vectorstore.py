@@ -10,12 +10,12 @@ import typer  # type: ignore[import-not-found]
 
 from exercise_finder.services.vectorstore.main import (
     create_vector_store,
-    add_jsonl_questions_to_vector_store,
+    add_yaml_questions_to_vector_store,
     vectorstore_fetch,
     search_vector_store,
 )
 from exercise_finder.services.questionformatter.main import load_formatted_question_from_exam_and_question_number
-from exercise_finder.config import update_vector_store_id
+from exercise_finder.config import update_vector_store_id, get_vector_store_id
 import exercise_finder.paths as paths
 from .utils import get_openai_client
 
@@ -51,25 +51,58 @@ def create(
         
 
 
+def _add_exam_to_vector_store(exam_dir: Path) -> None:
+    """Internal helper: Add questions from an exam directory to the vector store."""
+    if not exam_dir.is_dir():
+        raise ValueError(f"Path must be a directory, got {exam_dir}")
+    
+    # Step 1: Get the OpenAI client and vector store ID
+    client = get_openai_client()
+    vector_store_id = get_vector_store_id()
+    
+    # Step 2: Add the questions to the vector store
+    add_yaml_questions_to_vector_store(
+        client=client,
+        vector_store_id=vector_store_id,
+        exam_dir=exam_dir,
+    )
+
+
 @app.command("add")
 def add(
-    vector_store_id: str = typer.Option(..., "--vector-store-id", "--id"),
-    jsonl_dir: Path = typer.Option(
+    exam_dir: Path = typer.Argument(..., help="Path to exam directory containing YAML files (e.g., data/questions-extracted/VW-1025-a-18-1-o/)"),
+) -> None:
+    """Add questions from an exam directory to the vector store."""
+    
+    try:
+        _add_exam_to_vector_store(exam_dir)
+        typer.echo(f"✓ Added questions from {exam_dir.name}")
+    except ValueError as e:
+        typer.echo(f"✗ Error: {e}", err=True)
+        raise typer.Exit(1)
+
+
+@app.command("add-all")
+def add_all(
+    exams_root: Path = typer.Option(
         paths.questions_extracted_dir(),
-        "--jsonl-dir",
-        exists=True,
-        readable=True,
-        help="Directory containing JSONL files (one QuestionRecord per line).",
+        "--exams-root",
+        help="Folder that contains multiple exam folders, e.g. data/questions-extracted",
     ),
 ) -> None:
-    """Add questions from a directory of JSONL files to an existing vector store."""
-    client = get_openai_client()
-    for jsonl_path in jsonl_dir.glob("*.jsonl"):
-        add_jsonl_questions_to_vector_store(
-            client=client,
-            vector_store_id=vector_store_id,
-            jsonl_path=jsonl_path,
-        )
+    """Add all questions from all exam directories to the vector store."""
+
+    # for each exam directory, add the questions to the vector store
+    for exam_dir in exams_root.glob("*"):
+        if not exam_dir.is_dir():
+            continue
+        
+        typer.echo(f"Processing exam directory: {exam_dir.name}")
+        try:
+            _add_exam_to_vector_store(exam_dir)
+            typer.echo(f"✓ Added questions from {exam_dir.name}")
+        except Exception as e:
+            typer.echo(f"✗ Error adding {exam_dir.name}: {e}", err=True)
 
 
 @app.command("search")

@@ -1,6 +1,7 @@
 """Tests for Pydantic models."""
 import pytest  # type: ignore[import-not-found]
 import json
+import yaml # type: ignore[import-untyped]
 from pathlib import Path
 
 from exercise_finder.pydantic_models import (  # type: ignore
@@ -455,8 +456,8 @@ class TestQuestionRecord:
         assert json.loads(attrs["figure_images"]) == ["figures/fig1.png"]
         assert json.loads(attrs["source_images"]) == ["page1.png"]
     
-    def test_from_jsonl_valid(self, tmp_path: Path):
-        """Test loading question records from valid JSONL file."""
+    def test_from_yaml_valid(self, tmp_path: Path):
+        """Test loading question records from valid YAML file."""
         exam = Exam(id="VW-1025-a-20-1-o", level=ExamLevel.VWO, year=2020, tijdvak=1)
         record1 = QuestionRecord(
             id="VW-1025-a-20-1-o_q01",
@@ -477,14 +478,13 @@ class TestQuestionRecord:
             source_images=[]
         )
         
-        # Write JSONL file
-        jsonl_file = tmp_path / "VW-1025-a-20-1-o.jsonl"
-        with jsonl_file.open("w", encoding="utf-8") as f:
-            f.write(record1.model_dump_json() + "\n")
-            f.write(record2.model_dump_json() + "\n")
+        # Write YAML file
+        yaml_file = tmp_path / "VW-1025-a-20-1-o.yaml"
+        with yaml_file.open("w", encoding="utf-8") as f:
+            yaml.dump([record1.model_dump(mode="json"), record2.model_dump(mode="json")], f)
         
         # Load and validate
-        loaded_records = QuestionRecord.from_jsonl(jsonl_file)
+        loaded_records = QuestionRecord.from_yaml(yaml_file)
         
         assert len(loaded_records) == 2
         assert loaded_records[0].id == "VW-1025-a-20-1-o_q01"
@@ -492,50 +492,51 @@ class TestQuestionRecord:
         assert loaded_records[1].id == "VW-1025-a-20-1-o_q02"
         assert loaded_records[1].figure.present is True
     
-    def test_from_jsonl_file_not_found(self, tmp_path: Path):
-        """Test from_jsonl with non-existent file."""
-        jsonl_file = tmp_path / "nonexistent.jsonl"
+    def test_from_yaml_file_not_found(self, tmp_path: Path):
+        """Test from_yaml with non-existent file."""
+        yaml_file = tmp_path / "nonexistent.yaml"
         
         with pytest.raises(FileNotFoundError):
-            QuestionRecord.from_jsonl(jsonl_file)
+            QuestionRecord.from_yaml(yaml_file)
     
-    def test_from_jsonl_not_a_file(self, tmp_path: Path):
-        """Test from_jsonl with a directory instead of file."""
+    def test_from_yaml_not_a_file(self, tmp_path: Path):
+        """Test from_yaml with a directory instead of file."""
         directory = tmp_path / "not_a_file"
         directory.mkdir()
         
         with pytest.raises(ValueError, match="Path is not a file"):
-            QuestionRecord.from_jsonl(directory)
+            QuestionRecord.from_yaml(directory)
     
-    def test_from_jsonl_wrong_extension(self, tmp_path: Path):
-        """Test from_jsonl with wrong file extension."""
+    def test_from_yaml_wrong_extension(self, tmp_path: Path):
+        """Test from_yaml with wrong file extension."""
         wrong_file = tmp_path / "test.txt"
         wrong_file.write_text("test")
         
-        with pytest.raises(ValueError, match="must have .jsonl extension"):
-            QuestionRecord.from_jsonl(wrong_file)
+        with pytest.raises(ValueError, match="must have .yaml extension"):
+            QuestionRecord.from_yaml(wrong_file)
     
-    def test_from_jsonl_empty_file(self, tmp_path: Path):
-        """Test from_jsonl with empty file."""
-        jsonl_file = tmp_path / "empty.jsonl"
-        jsonl_file.write_text("")
+    def test_from_yaml_empty_file(self, tmp_path: Path):
+        """Test from_yaml with empty file."""
+        yaml_file = tmp_path / "VW-1025-a-20-1-o.yaml"
+        yaml_file.write_text("")
         
-        with pytest.raises(ValueError, match="contains no valid records"):
-            QuestionRecord.from_jsonl(jsonl_file)
+        with pytest.raises(ValueError, match="YAML file is empty"):
+            QuestionRecord.from_yaml(yaml_file)
     
-    def test_from_jsonl_invalid_json(self, tmp_path: Path):
-        """Test from_jsonl with invalid JSON."""
-        jsonl_file = tmp_path / "invalid.jsonl"
-        jsonl_file.write_text("not valid json\n")
+    def test_from_yaml_invalid_data(self, tmp_path: Path):
+        """Test from_yaml with invalid data."""
+        yaml_file = tmp_path / "VW-1025-a-20-1-o.yaml"
+        with yaml_file.open("w") as f:
+            yaml.dump([{"invalid": "data"}], f)
         
-        with pytest.raises(ValueError, match="Invalid record at line 1"):
-            QuestionRecord.from_jsonl(jsonl_file)
+        with pytest.raises(ValueError, match="Invalid record at index 0"):
+            QuestionRecord.from_yaml(yaml_file)
     
-    def test_from_jsonl_skips_blank_lines(self, tmp_path: Path):
-        """Test that from_jsonl skips blank lines."""
-        exam = Exam(id="VW-1025-a-20-1-o", level=ExamLevel.VWO, year=2020, tijdvak=1)
+    def test_from_yaml_exam_id_mismatch(self, tmp_path: Path):
+        """Test from_yaml with exam ID mismatch between filename and records."""
+        exam = Exam(id="VW-1025-a-19-1-o", level=ExamLevel.VWO, year=2019, tijdvak=1)  # Different year
         record = QuestionRecord(
-            id="VW-1025-a-20-1-o_q01",
+            id="VW-1025-a-19-1-o_q01",
             exam=exam,
             title="Title",
             question_number="1",
@@ -544,14 +545,13 @@ class TestQuestionRecord:
             source_images=[]
         )
         
-        jsonl_file = tmp_path / "with_blanks.jsonl"
-        with jsonl_file.open("w", encoding="utf-8") as f:
-            f.write("\n")  # blank line
-            f.write(record.model_dump_json() + "\n")
-            f.write("\n")  # blank line
+        # Filename suggests 2020, but record has 2019
+        yaml_file = tmp_path / "VW-1025-a-20-1-o.yaml"
+        with yaml_file.open("w") as f:
+            yaml.dump([record.model_dump(mode="json")], f)
         
-        loaded_records = QuestionRecord.from_jsonl(jsonl_file)
-        assert len(loaded_records) == 1
+        with pytest.raises(ValueError, match="Exam ID mismatch"):
+            QuestionRecord.from_yaml(yaml_file)
 
 
 class TestQuestionRecordVectorStoreAttributes:
@@ -664,4 +664,3 @@ class TestQuestionRecordVectorStoreAttributes:
         
         with pytest.raises(Exception):  # Pydantic ValidationError
             QuestionRecordVectorStoreAttributes.model_validate(attrs_dict)
-

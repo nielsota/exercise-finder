@@ -5,7 +5,7 @@ import dotenv
 from agents import Agent, ModelSettings, Runner, TResponseInputItem
 
 from exercise_finder.enums import AgentName, OpenAIModel
-from exercise_finder.pydantic_models import MultipartQuestionOutput
+from exercise_finder.pydantic_models import AgentMultipartQuestionOutput
 
 dotenv.load_dotenv()
 
@@ -17,7 +17,7 @@ You format Dutch math exam exercises into a multipart structure.
 Input: raw question text that may contain a shared stem plus multiple subparts (a/b/c or 1/2/3).
 
 Output a JSON object matching this schema exactly:
-{MultipartQuestionOutput.model_json_schema()}
+{AgentMultipartQuestionOutput.model_json_schema()}
 
 Rules:
 - `title` is the question title. It should be included in the title field.
@@ -40,7 +40,7 @@ class FormatMultipartAgent(Agent):
             instructions=prompt,
             model=model.value,
             model_settings=ModelSettings(store=True),
-            output_type=MultipartQuestionOutput,
+            output_type=AgentMultipartQuestionOutput,
             tools=[],
         )
 
@@ -50,9 +50,11 @@ async def format_multipart_question(
     question_text: str,
     model: OpenAIModel = OpenAIModel.GPT_5_MINI,
     prompt: str = get_system_prompt(),
-) -> MultipartQuestionOutput:
+) -> AgentMultipartQuestionOutput:
     """
     Convert a raw (possibly multipart) question text into a structured stem + parts list.
+    
+    Returns AgentMultipartQuestionOutput (text only, no metadata).
 
     This is intended as step 2 of a 2-step pipeline:
     1) vision OCR -> `question_text`

@@ -13,7 +13,7 @@
       - question_text: str
       - max_marks: int (optional)
       - calculator_allowed: bool
-      - figure_images: list (optional)
+      - parts: list of strings (optional)
 #}
 
 {% macro exercise_card_simple(exercise) %}
@@ -65,7 +65,7 @@
         <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2m2 10H3v4c0 1.1.9 2 2 2h4v-2H5zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2" fill="currentColor"/>
         </svg>
-        Bekijk {{ exercise.figure_images|length }} figur{{ 'en' if exercise.figure_images|length != 1 else 'ur' }}
+        Bekijk {{ exercise.figure_images|length }} figu{{ 'ren' if exercise.figure_images|length != 1 else 'ur' }}
       </a>
     </div>
   {% endif %}

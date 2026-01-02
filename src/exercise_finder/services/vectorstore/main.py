@@ -96,23 +96,23 @@ def create_vector_store(*, client: OpenAI, name: str, description: str = "exerci
     return vs.id  # type: ignore[return-value]
 
 
-def add_jsonl_questions_to_vector_store(
+def add_yaml_questions_to_vector_store(
     *,
     client: OpenAI,
     vector_store_id: str,
-    jsonl_path: Path,
+    exam_dir: Path,
     index_files_dir: Path = paths.vectorstore_index_dir(),
 ) -> None:
     """
-    Upload each QuestionRecord in JSONL as a separate text file and add it to the vector store.
+    Upload each QuestionRecord from YAML files in an exam directory to the vector store.
     This preserves per-question metadata via vector-store file attributes.
 
     Inputs:
-    - `jsonl_path`: a JSONL file where each line is a `QuestionRecord` (your output from `images-to-questions`)
+    - `exam_dir`: directory containing YAML files (e.g., data/questions-extracted/VW-1025-a-18-1-o/)
     - `index_files_dir`: where we materialize the temporary `.txt` files that get uploaded
 
     Side effects:
-    - Writes `data/vectorstore-index/<jsonl-stem>/<record_id>.txt`
+    - Writes `data/vectorstore-index/<exam-id>/<record_id>.txt`
     - Uploads each `.txt` to OpenAI Files
     - Attaches each file to the vector store with `attributes` including:
       - `record_id`, `question_number`, `exam_year`, ...
@@ -120,20 +120,22 @@ def add_jsonl_questions_to_vector_store(
 
     Example:
     ```py
-    add_jsonl_questions_to_vector_store(
+    add_yaml_questions_to_vector_store(
         client=client,
         vector_store_id="vs_...",
-        jsonl_path=Path("data/questions-extracted/VW-1025-a-18-1-o.jsonl"),
+        exam_dir=Path("data/questions-extracted/VW-1025-a-18-1-o/"),
     )
     ```
     """
-    records = QuestionRecord.from_jsonl(jsonl_path)
+    # Load all records from the exam directory
+    records = QuestionRecord.from_exam_dir(exam_dir)
+    
     add_question_records_to_vector_store(
         client=client,
         vector_store_id=vector_store_id,
         records=records,
         index_files_dir=index_files_dir,
-        dataset_name=jsonl_path.stem,
+        dataset_name=exam_dir.name,
     )
 
 

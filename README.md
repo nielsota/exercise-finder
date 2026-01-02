@@ -27,7 +27,7 @@ Note the returned vector store ID (e.g., `vs_694b9b4403e881918fd7b5c04a301771`)
 
 **Add extracted questions to vector store:**
 ```bash
-uv run mw vectorstore add --vector-store-id vs_694b9b4403e881918fd7b5c04a301771
+uv run mw vectorstore add 
 ```
 
 Processes all JSONL files in `data/questions-extracted/` by default.

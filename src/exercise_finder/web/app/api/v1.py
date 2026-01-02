@@ -73,8 +73,8 @@ def create_v1_router(exams_root: Path) -> APIRouter:
         return {
             **search_result,
             "formatted": formatted_question.model_dump(mode="json"),
-            "page_images": [f"/image/{exam_id}/{p}" for p in search_result["page_images"]],
-            "figure_images": [f"/image/{exam_id}/{p}" for p in search_result["figure_images"]],
+            "page_images": [f"/api/v1/image/{exam_id}/{p}" for p in search_result["page_images"]],
+            "figure_images": [f"/api/v1/image/{exam_id}/{p}" for p in search_result["figure_images"]],
         }
 
     @router.post("/refresh-config")
@@ -99,6 +99,7 @@ def create_v1_router(exams_root: Path) -> APIRouter:
         # Only allow serving files under the configured exams root:
         #   <exams_root>/<exam_id>/<rel_path>
         candidate = paths.exam_asset_under_root(exams_root, exam_id, rel_path).resolve()
+        print(f"Serving image {candidate} from {exams_root}")
         try:
             candidate.relative_to(exams_root)
         except Exception:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Callable
 import asyncio
 import yaml  # type: ignore[import-untyped]
 
@@ -98,12 +99,12 @@ def load_formatted_question_from_exam_and_question_number(
     *,
     exam_id: str,
     question_number: str,
-    out_dir: Path = paths.questions_formatted_dir(),
+    quesion_path: Callable[[str, str], Path] = paths.formatted_question_path,
 ) -> MultipartQuestionOutput:
     """
     Load a formatted question from a YAML file in the output directory.
     """
-    out_path = out_dir / exam_id / f"q{question_number}.yaml"
+    out_path = quesion_path(exam_id, question_number)
 
     if not out_path.exists():
         raise FileNotFoundError(f"Formatted question file not found: {out_path}")

@@ -10,12 +10,10 @@ from fastapi import FastAPI  # type: ignore[import-not-found]
 from fastapi.staticfiles import StaticFiles  # type: ignore[import-not-found]
 from fastapi.templating import Jinja2Templates  # type: ignore[import-not-found]
 from openai import OpenAI  # type: ignore[import-not-found]
-from starlette.middleware.sessions import SessionMiddleware  # type: ignore[import-not-found]
 from starlette.requests import Request  # type: ignore[import-not-found]
 from starlette.responses import RedirectResponse  # type: ignore[import-not-found]
 
 from exercise_finder.config import get_vector_store_id
-from exercise_finder.constants import SESSION_EXPIRATION_SECONDS
 from .auth import NotAuthenticatedException, create_auth_router
 from .routes import create_main_router
 from .api.v1 import create_v1_router
@@ -50,18 +48,6 @@ def create_app(
     web_dir = Path(__file__).resolve().parent.parent
 
     app = FastAPI(title="Exercise Finder", version="0.1.0")
-    
-    # Add session middleware for authentication
-    secret_key = os.getenv("SESSION_SECRET_KEY", "dev-secret-change-in-production")
-    app.add_middleware(
-        SessionMiddleware,
-        secret_key=secret_key,
-        session_cookie="session",  # Explicit cookie name
-        max_age=SESSION_EXPIRATION_SECONDS,  # Cookie expires after 24 hours
-        path="/",  # Cookie valid for entire site
-        same_site="lax",  # Allow cookie to be sent on redirects
-        https_only=False,  # Allow HTTP for local development (change to True in production)
-    )
     
     # Store OpenAI client and exams root in app state
     app.state.client = OpenAI()

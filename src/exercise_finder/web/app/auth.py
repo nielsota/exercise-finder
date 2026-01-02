@@ -23,21 +23,21 @@ class NotAuthenticatedException(Exception):
 
 
 def is_authenticated(request: Request) -> bool:
-    """Check if the user has a valid Cognito session."""
-    id_token = request.session.get("id_token")
+    """Check if the user has a valid Cognito session from cookies."""
+    id_token = request.cookies.get("id_token")
     if not id_token:
         return False
     
-    login_time = request.session.get("login_time")
-    if login_time is None:
-        request.session.clear()
-        return False
-    
-    if time.time() - login_time > SESSION_EXPIRATION_SECONDS:
-        request.session.clear()
+    login_time_str = request.cookies.get("login_time")
+    if not login_time_str:
         return False
     
     try:
+        login_time = float(login_time_str)
+        if time.time() - login_time > SESSION_EXPIRATION_SECONDS:
+            return False
+        
+        # Validate JWT structure (without signature verification)
         jwt.decode(
             id_token,
             key=None,
@@ -54,8 +54,7 @@ def is_authenticated(request: Request) -> bool:
             }
         )
         return True
-    except JWTError:
-        request.session.clear()
+    except (ValueError, JWTError):
         return False
 
 
@@ -113,52 +112,28 @@ def create_auth_router(templates: Jinja2Templates) -> APIRouter:
             response.raise_for_status()
             tokens = response.json()
             
-            # Decode JWT to extract user info
-            user_info = jwt.decode(
-                tokens["id_token"],
-                key=None,
-                options={
-                    "verify_signature": False,
-                    "verify_aud": False,
-                    "verify_iat": False,
-                    "verify_exp": False,
-                    "verify_nbf": False,
-                    "verify_iss": False,
-                    "verify_sub": False,
-                    "verify_jti": False,
-                    "verify_at_hash": False,
-                }
+            # Store tokens directly in HTTP-only cookies
+            response = RedirectResponse(url="/", status_code=303)
+            
+            # Set secure HTTP-only cookies
+            response.set_cookie(
+                key="id_token",
+                value=tokens["id_token"],
+                max_age=SESSION_EXPIRATION_SECONDS,
+                httponly=True,
+                samesite="lax",
+                secure=False,  # Set to True in production with HTTPS
+            )
+            response.set_cookie(
+                key="login_time",
+                value=str(int(time.time())),
+                max_age=SESSION_EXPIRATION_SECONDS,
+                httponly=True,
+                samesite="lax",
+                secure=False,
             )
             
-            # Set session data
-            request.session["id_token"] = tokens["id_token"]
-            request.session["access_token"] = tokens.get("access_token")
-            request.session["refresh_token"] = tokens.get("refresh_token")
-            request.session["login_time"] = time.time()
-            request.session["user_email"] = user_info.get("email")
-            request.session["user_name"] = user_info.get("name") or user_info.get("cognito:username")
-            
-            # Return HTML that will redirect after session is saved
-            html = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Login Successful</title>
-                <meta http-equiv="refresh" content="1;url=/">
-            </head>
-            <body style="font-family: sans-serif; text-align: center; padding-top: 100px;">
-                <h2>Login successful!</h2>
-                <p>Redirecting to home page...</p>
-                <script>
-                    setTimeout(function() {{
-                        window.location.href = '/';
-                    }}, 1000);
-                </script>
-            </body>
-            </html>
-            """
-            from fastapi.responses import HTMLResponse
-            return HTMLResponse(content=html, status_code=200)
+            return response
             
         except Exception as e:
             print(f"OAuth callback error: {e}")
@@ -167,15 +142,19 @@ def create_auth_router(templates: Jinja2Templates) -> APIRouter:
     @router.post("/logout")
     @router.get("/logout")
     async def logout(request: Request) -> RedirectResponse:
-        """Clear the session and redirect to Cognito logout."""
-        request.session.clear()
-        
+        """Clear auth cookies and redirect to Cognito logout."""
         params = {
             "client_id": config.client_id,
             "logout_uri": config.redirect_uri.replace("/callback", "/login"),
         }
         
         cognito_logout_url = paths.cognito_logout_url(config.domain, params)
-        return RedirectResponse(url=cognito_logout_url, status_code=303)
+        response = RedirectResponse(url=cognito_logout_url, status_code=303)
+        
+        # Delete auth cookies
+        response.delete_cookie("id_token")
+        response.delete_cookie("login_time")
+        
+        return response
 
     return router

@@ -103,8 +103,6 @@ class QuestionRecord(BaseModel):
         Example:
             records = QuestionRecord.from_yaml(Path("data/questions-extracted/VW-1025-a-18-1-o.yaml"))
         """
-        import yaml  # type: ignore[import-untyped]
-        
         # Validate file exists
         if not yaml_path.exists():
             raise FileNotFoundError(f"YAML file not found: {yaml_path}")
@@ -166,8 +164,6 @@ class QuestionRecord(BaseModel):
         Example:
             records = QuestionRecord.from_exam_dir(Path("data/questions-extracted/VW-1025-a-18-1-o/"))
         """
-        import yaml  # type: ignore[import-untyped]
-        
         # Validate directory exists
         if not exam_dir.exists():
             raise FileNotFoundError(f"Exam directory not found: {exam_dir}")
@@ -645,4 +641,3 @@ class ExamFolderStructure(BaseModel):
             )
         
         return self
-

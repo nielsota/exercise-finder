@@ -276,7 +276,7 @@ class TestPathHelpers:
     def test_formatted_exam_dir_builds_correct_path(self):
         """formatted_exam_dir() should build the correct path."""
         exam_id = "VW-1025-a-19-1-o"
-        expected = paths.questions_formatted_dir() / exam_id
+        expected = paths.questions_formatted_dir() / "exams" / exam_id
         actual = paths.formatted_exam_dir(exam_id)
         
         assert actual == expected
@@ -285,7 +285,7 @@ class TestPathHelpers:
         """formatted_question_path() should build the correct path."""
         exam_id = "VW-1025-a-19-1-o"
         question_number = "1"
-        expected = paths.questions_formatted_dir() / exam_id / "q1.yaml"
+        expected = paths.questions_formatted_dir() / "exams" / exam_id / "q1.yaml"
         actual = paths.formatted_question_path(exam_id, question_number)
         
         assert actual == expected

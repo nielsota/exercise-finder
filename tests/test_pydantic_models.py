@@ -1,6 +1,7 @@
 """Tests for Pydantic models."""
 import pytest  # type: ignore[import-not-found]
 import json
+import yaml # type: ignore[import-untyped]
 from pathlib import Path
 
 from exercise_finder.pydantic_models import (  # type: ignore
@@ -457,8 +458,6 @@ class TestQuestionRecord:
     
     def test_from_yaml_valid(self, tmp_path: Path):
         """Test loading question records from valid YAML file."""
-        import yaml
-        
         exam = Exam(id="VW-1025-a-20-1-o", level=ExamLevel.VWO, year=2020, tijdvak=1)
         record1 = QuestionRecord(
             id="VW-1025-a-20-1-o_q01",
@@ -518,8 +517,6 @@ class TestQuestionRecord:
     
     def test_from_yaml_empty_file(self, tmp_path: Path):
         """Test from_yaml with empty file."""
-        import yaml
-        
         yaml_file = tmp_path / "VW-1025-a-20-1-o.yaml"
         yaml_file.write_text("")
         
@@ -528,8 +525,6 @@ class TestQuestionRecord:
     
     def test_from_yaml_invalid_data(self, tmp_path: Path):
         """Test from_yaml with invalid data."""
-        import yaml
-        
         yaml_file = tmp_path / "VW-1025-a-20-1-o.yaml"
         with yaml_file.open("w") as f:
             yaml.dump([{"invalid": "data"}], f)
@@ -539,8 +534,6 @@ class TestQuestionRecord:
     
     def test_from_yaml_exam_id_mismatch(self, tmp_path: Path):
         """Test from_yaml with exam ID mismatch between filename and records."""
-        import yaml
-        
         exam = Exam(id="VW-1025-a-19-1-o", level=ExamLevel.VWO, year=2019, tijdvak=1)  # Different year
         record = QuestionRecord(
             id="VW-1025-a-19-1-o_q01",
@@ -671,4 +664,3 @@ class TestQuestionRecordVectorStoreAttributes:
         
         with pytest.raises(Exception):  # Pydantic ValidationError
             QuestionRecordVectorStoreAttributes.model_validate(attrs_dict)
-

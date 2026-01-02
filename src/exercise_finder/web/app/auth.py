@@ -38,7 +38,21 @@ def is_authenticated(request: Request) -> bool:
         return False
     
     try:
-        jwt.decode(id_token, options={"verify_signature": False})
+        jwt.decode(
+            id_token,
+            key=None,
+            options={
+                "verify_signature": False,
+                "verify_aud": False,
+                "verify_iat": False,
+                "verify_exp": False,
+                "verify_nbf": False,
+                "verify_iss": False,
+                "verify_sub": False,
+                "verify_jti": False,
+                "verify_at_hash": False,
+            }
+        )
         return True
     except JWTError:
         request.session.clear()
@@ -71,7 +85,7 @@ def create_auth_router(templates: Jinja2Templates) -> APIRouter:
         params = {
             "client_id": config.client_id,
             "response_type": "code",
-            "scope": "email openid phone",
+            "scope": "email openid",
             "redirect_uri": config.redirect_uri,
         }
         
@@ -99,16 +113,52 @@ def create_auth_router(templates: Jinja2Templates) -> APIRouter:
             response.raise_for_status()
             tokens = response.json()
             
+            # Decode JWT to extract user info
+            user_info = jwt.decode(
+                tokens["id_token"],
+                key=None,
+                options={
+                    "verify_signature": False,
+                    "verify_aud": False,
+                    "verify_iat": False,
+                    "verify_exp": False,
+                    "verify_nbf": False,
+                    "verify_iss": False,
+                    "verify_sub": False,
+                    "verify_jti": False,
+                    "verify_at_hash": False,
+                }
+            )
+            
+            # Set session data
             request.session["id_token"] = tokens["id_token"]
             request.session["access_token"] = tokens.get("access_token")
             request.session["refresh_token"] = tokens.get("refresh_token")
             request.session["login_time"] = time.time()
-            
-            user_info = jwt.decode(tokens["id_token"], options={"verify_signature": False})
             request.session["user_email"] = user_info.get("email")
             request.session["user_name"] = user_info.get("name") or user_info.get("cognito:username")
             
-            return RedirectResponse(url="/", status_code=303)
+            # Return HTML that will redirect after session is saved
+            html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Login Successful</title>
+                <meta http-equiv="refresh" content="1;url=/">
+            </head>
+            <body style="font-family: sans-serif; text-align: center; padding-top: 100px;">
+                <h2>Login successful!</h2>
+                <p>Redirecting to home page...</p>
+                <script>
+                    setTimeout(function() {{
+                        window.location.href = '/';
+                    }}, 1000);
+                </script>
+            </body>
+            </html>
+            """
+            from fastapi.responses import HTMLResponse
+            return HTMLResponse(content=html, status_code=200)
             
         except Exception as e:
             print(f"OAuth callback error: {e}")

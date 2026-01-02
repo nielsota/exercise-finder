@@ -56,7 +56,11 @@ def create_app(
     app.add_middleware(
         SessionMiddleware,
         secret_key=secret_key,
+        session_cookie="session",  # Explicit cookie name
         max_age=SESSION_EXPIRATION_SECONDS,  # Cookie expires after 24 hours
+        path="/",  # Cookie valid for entire site
+        same_site="lax",  # Allow cookie to be sent on redirects
+        https_only=False,  # Allow HTTP for local development (change to True in production)
     )
     
     # Store OpenAI client and exams root in app state

@@ -27,6 +27,7 @@ class AppConfig(BaseSettings):
     
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
     
+    is_production: bool = Field(default=False, description="Whether the application is in production")
     openai_api_key: str = Field(..., description="OpenAI API key")
     session_secret_key: str = Field(..., description="Secret key for session cookies")
     exams_root: Path = Field(default=Path("data/questions-images"), description="Root directory for exam images")

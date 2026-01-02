@@ -13,7 +13,7 @@ from starlette.requests import Request  # type: ignore[import-not-found]
 from starlette.responses import RedirectResponse  # type: ignore[import-not-found]
 
 from exercise_finder import paths
-from exercise_finder.config import get_cognito_config
+from exercise_finder.config import get_cognito_config, get_app_config
 from exercise_finder.constants import SESSION_EXPIRATION_SECONDS
 
 
@@ -70,6 +70,26 @@ def require_authentication(request: Request) -> bool:
     return True
 
 
+def _set_auth_cookie(response: RedirectResponse, value: str, key: str) -> RedirectResponse:
+    """Set an auth cookie in the response."""
+    response = response.set_cookie(
+        key=key,
+        value=value,
+        max_age=SESSION_EXPIRATION_SECONDS,
+        httponly=True, 
+        samesite="lax",
+        secure=get_app_config().is_production,
+    )
+    return response
+
+
+def _set_auth_cookies(response: RedirectResponse, params: dict) -> RedirectResponse:
+    """Set multiple auth cookies in the response."""
+    for key, value in params.items():
+        response = _set_auth_cookie(response, value, key)
+    return response
+
+
 def create_auth_router(templates: Jinja2Templates) -> APIRouter:
     """Create the authentication router with Cognito OAuth flow."""
     router = APIRouter(tags=["authentication"])
@@ -78,9 +98,6 @@ def create_auth_router(templates: Jinja2Templates) -> APIRouter:
     @router.get("/login", response_model=None)
     async def login(request: Request) -> RedirectResponse | HTMLResponse:
         """Redirect to Cognito hosted UI for login."""
-        if is_authenticated(request):
-            return RedirectResponse(url="/", status_code=303)
-        
         params = {
             "client_id": config.client_id,
             "response_type": "code",
@@ -115,26 +132,13 @@ def create_auth_router(templates: Jinja2Templates) -> APIRouter:
             # Store tokens directly in HTTP-only cookies
             response = RedirectResponse(url="/", status_code=303)
             
-            # Set secure HTTP-only cookies
-            response.set_cookie(
-                key="id_token",
-                value=tokens["id_token"],
-                max_age=SESSION_EXPIRATION_SECONDS,
-                httponly=True,
-                samesite="lax",
-                secure=False,  # Set to True in production with HTTPS
-            )
-            response.set_cookie(
-                key="login_time",
-                value=str(int(time.time())),
-                max_age=SESSION_EXPIRATION_SECONDS,
-                httponly=True,
-                samesite="lax",
-                secure=False,
-            )
+            # Set secure HTTP(s)-only cookies
+            response = _set_auth_cookies(response, {
+                "id_token": tokens["id_token"], 
+                "login_time": str(int(time.time()))
+            })
             
             return response
-            
         except Exception as e:
             print(f"OAuth callback error: {e}")
             return RedirectResponse(url="/login?error=authentication_failed", status_code=303)

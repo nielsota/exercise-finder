@@ -96,7 +96,7 @@ class TestAuthRoutes:
     def test_login_redirects_to_cognito(self, client):
         """Login should redirect to Cognito hosted UI."""
         response = client.get("/login", follow_redirects=False)
-        assert response.status_code == 303
+        assert response.status_code == 302  # authlib uses standard OAuth 302 redirect
         
         # Should redirect to Cognito domain
         redirect_url = response.headers.get("location", "")

@@ -10,10 +10,12 @@ from fastapi import FastAPI  # type: ignore[import-not-found]
 from fastapi.staticfiles import StaticFiles  # type: ignore[import-not-found]
 from fastapi.templating import Jinja2Templates  # type: ignore[import-not-found]
 from openai import OpenAI  # type: ignore[import-not-found]
+from starlette.middleware.sessions import SessionMiddleware  # type: ignore[import-not-found]
 from starlette.requests import Request  # type: ignore[import-not-found]
 from starlette.responses import RedirectResponse  # type: ignore[import-not-found]
 
-from exercise_finder.config import get_vector_store_id
+from exercise_finder.config import get_vector_store_id, get_app_config
+from exercise_finder.constants import SESSION_EXPIRATION_SECONDS
 from .auth import NotAuthenticatedException, create_auth_router
 from .routes import create_main_router
 from .api.v1 import create_v1_router
@@ -48,6 +50,16 @@ def create_app(
     web_dir = Path(__file__).resolve().parent.parent
 
     app = FastAPI(title="Exercise Finder", version="0.1.0")
+    
+    # SessionMiddleware is required by authlib for OAuth state storage + user session
+    app_config = get_app_config()
+    app.add_middleware(
+        SessionMiddleware,
+        secret_key=app_config.session_secret_key,
+        max_age=SESSION_EXPIRATION_SECONDS,  # 24 hours
+        same_site="lax",
+        https_only=app_config.is_production,
+    )
     
     # Store OpenAI client and exams root in app state
     app.state.client = OpenAI()

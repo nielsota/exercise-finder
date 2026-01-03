@@ -18,6 +18,7 @@ class CognitoConfig(BaseSettings):
     domain: str = Field(..., description="Cognito domain (e.g., app.auth.region.amazoncognito.com)")
     client_id: str = Field(..., description="Cognito app client ID")
     client_secret: str = Field(..., description="Cognito app client secret")
+    user_pool_id: str = Field(..., description="Cognito user pool ID (e.g., us-east-1_xxxxxx)")
     region: str = Field(default="us-east-1", description="AWS region")
     redirect_uri: str = Field(default="http://localhost:8000/callback", description="OAuth callback URL")
 

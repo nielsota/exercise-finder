@@ -28,7 +28,20 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  gap: 12px;
+  gap: 16px;
+}
+
+.card-header .card-title {
+  flex: 0 0 auto;
+}
+
+.card-header .difficulty-rating {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.card-header .card-badges {
+  flex: 0 0 auto;
 }
 
 .card-title {
@@ -146,4 +159,56 @@ body {
 .figure-link svg {
   width: 16px;
   height: 16px;
+}
+
+/* Difficulty rating */
+.difficulty-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.difficulty-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.difficulty-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.difficulty-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.difficulty-dots .dot.empty {
+  background: #E8E8E8;
+}
+
+/* Difficulty level colors */
+.difficulty-easy .difficulty-label {
+  color: #12B76A;
+}
+
+.difficulty-easy .dot.filled {
+  background: #12B76A;
+}
+
+.difficulty-medium .difficulty-label {
+  color: #F79009;
+}
+
+.difficulty-medium .dot.filled {
+  background: #F79009;
+}
+
+.difficulty-hard .difficulty-label {
+  color: #F04438;
+}
+
+.difficulty-hard .dot.filled {
+  background: #F04438;
 }

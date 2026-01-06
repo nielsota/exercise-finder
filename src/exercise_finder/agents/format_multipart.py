@@ -12,7 +12,7 @@ dotenv.load_dotenv()
 
 def get_system_prompt() -> str:
     return f"""
-You format Dutch math exam exercises into a multipart structure.
+You format Dutch math exam exercises into a multipart structure and assess difficulty.
 
 Input: raw question text that may contain a shared stem plus multiple subparts (a/b/c or 1/2/3).
 
@@ -27,6 +27,12 @@ Rules:
   - If no points are specified, use 0
   - The `text` field should contain the question text without the points annotation
 - If there are no explicit subparts, put the entire text into `stem` and set `parts` to an empty list.
+- `difficulty` is an integer from 1-5 based on the question's complexity:
+  - 1: Very easy - direct application of a single formula or concept
+  - 2: Easy - straightforward problem with one or two steps
+  - 3: Medium - requires combining concepts or multi-step reasoning
+  - 4: Hard - complex problem requiring insight or multiple techniques
+  - 5: Very hard - challenging problem with non-obvious approach or many steps
 - Preserve ALL LaTeX delimiters exactly as given: \\( ... \\), \\[ ... \\], $ ... $, $$ ... $$.
 - Do not solve the problem.
 - The question text is in Dutch - keep it in Dutch.

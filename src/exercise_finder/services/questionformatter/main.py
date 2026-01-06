@@ -67,10 +67,11 @@ def format_questions(
                     
                     # Promote to MultipartQuestionOutput and add metadata
                     formatted_question = MultipartQuestionOutput(
-                        # Agent output (text content)
+                        # Agent output (text content + difficulty)
                         title=agent_output.title,
                         stem=agent_output.stem,
                         parts=agent_output.parts,
+                        difficulty=agent_output.difficulty,
                         
                         # Metadata from QuestionRecord (NOT agent-generated)
                         exam_id=question_record.exam.id,

@@ -9,12 +9,11 @@ from dotenv import load_dotenv  # type: ignore[import-not-found]
 from fastapi import FastAPI  # type: ignore[import-not-found]
 from fastapi.staticfiles import StaticFiles  # type: ignore[import-not-found]
 from fastapi.templating import Jinja2Templates  # type: ignore[import-not-found]
-from openai import OpenAI  # type: ignore[import-not-found]
 from starlette.middleware.sessions import SessionMiddleware  # type: ignore[import-not-found]
 from starlette.requests import Request  # type: ignore[import-not-found]
 from starlette.responses import RedirectResponse  # type: ignore[import-not-found]
 
-from exercise_finder.config import get_vector_store_id, get_app_config
+from exercise_finder.config import get_vector_store_id, get_app_config, get_openai_client
 from exercise_finder.constants import SESSION_EXPIRATION_SECONDS
 from .auth import NotAuthenticatedException, create_auth_router
 from .routes import create_main_router
@@ -62,7 +61,7 @@ def create_app(
     )
     
     # Store OpenAI client and exams root in app state
-    app.state.client = OpenAI()
+    app.state.client = get_openai_client()
     app.state.exams_root = exams_root
 
     # Initialize Jinja2 template engine to render HTML templates from the templates directory

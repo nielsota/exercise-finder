@@ -6,6 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import boto3  # type: ignore[import-untyped]
+from openai import OpenAI  # type: ignore[import-not-found]
 from pydantic import Field  # type: ignore[import-untyped]
 from pydantic_settings import BaseSettings, SettingsConfigDict  # type: ignore[import-untyped]
 
@@ -46,6 +47,11 @@ def get_app_config() -> AppConfig:
 def get_cognito_config() -> CognitoConfig:
     """Get cached Cognito configuration."""
     return CognitoConfig()
+
+
+def get_openai_client() -> OpenAI:
+    """Get an authenticated OpenAI client using AppConfig."""
+    return OpenAI(api_key=get_app_config().openai_api_key)
 
 
 def get_vector_store_id() -> str:

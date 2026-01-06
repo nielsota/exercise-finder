@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-import os
 import random
 from typing import Any
 
-from dotenv import load_dotenv # type: ignore[import-not-found]
 from openai import OpenAI # type: ignore[import-not-found]
 
+from exercise_finder.config import get_openai_client
 from exercise_finder.pydantic_models import QuestionRecord, QuestionRecordVectorStoreAttributes
 import exercise_finder.paths as paths
 
@@ -16,13 +15,6 @@ from .helpers import (
     save_file_to_openai,
     save_file_to_vector_store,
 )
-
-def _get_client() -> OpenAI:
-    load_dotenv()
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise ValueError("Missing OPENAI_API_KEY in environment.")
-    return OpenAI(api_key=api_key)
 
 
 async def vectorstore_fetch(*,
@@ -53,7 +45,7 @@ async def vectorstore_fetch(*,
         - page_images: List of page image paths
         - figure_images: List of figure image paths
     """
-    client = _get_client()
+    client = get_openai_client()
 
     # 1. Search the vector store for a query
     results = search_vector_store(

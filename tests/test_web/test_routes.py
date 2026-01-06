@@ -53,7 +53,7 @@ def mock_cognito_config():
 @pytest.fixture
 def mock_openai_client():
     """Mock the OpenAI client to avoid API calls during tests."""
-    with patch("exercise_finder.web.app.OpenAI") as mock:
+    with patch("exercise_finder.config.get_openai_client") as mock:
         mock_client = MagicMock()
         mock.return_value = mock_client
         yield mock_client
@@ -196,6 +196,7 @@ class TestAPIRoutes:
                     title="Test Question Title",
                     stem="Test question",
                     parts=[],
+                    difficulty=3,
                     page_images=["q1/pages/page1.png"],
                     figure_images=["q1/figures/fig1.png"],
                 )

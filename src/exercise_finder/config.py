@@ -6,6 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import boto3  # type: ignore[import-untyped]
+from openai import OpenAI  # type: ignore[import-not-found]
 from pydantic import Field  # type: ignore[import-untyped]
 from pydantic_settings import BaseSettings, SettingsConfigDict  # type: ignore[import-untyped]
 
@@ -18,6 +19,7 @@ class CognitoConfig(BaseSettings):
     domain: str = Field(..., description="Cognito domain (e.g., app.auth.region.amazoncognito.com)")
     client_id: str = Field(..., description="Cognito app client ID")
     client_secret: str = Field(..., description="Cognito app client secret")
+    user_pool_id: str = Field(..., description="Cognito user pool ID (e.g., us-east-1_xxxxxx)")
     region: str = Field(default="us-east-1", description="AWS region")
     redirect_uri: str = Field(default="http://localhost:8000/callback", description="OAuth callback URL")
 
@@ -27,6 +29,7 @@ class AppConfig(BaseSettings):
     
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
     
+    is_production: bool = Field(default=False, description="Whether the application is in production")
     openai_api_key: str = Field(..., description="OpenAI API key")
     session_secret_key: str = Field(..., description="Secret key for session cookies")
     exams_root: Path = Field(default=Path("data/questions-images"), description="Root directory for exam images")
@@ -44,6 +47,11 @@ def get_app_config() -> AppConfig:
 def get_cognito_config() -> CognitoConfig:
     """Get cached Cognito configuration."""
     return CognitoConfig()
+
+
+def get_openai_client() -> OpenAI:
+    """Get an authenticated OpenAI client using AppConfig."""
+    return OpenAI(api_key=get_app_config().openai_api_key)
 
 
 def get_vector_store_id() -> str:

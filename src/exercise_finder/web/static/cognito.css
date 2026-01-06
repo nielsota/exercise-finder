@@ -1,0 +1,128 @@
+/* MathWizard Cognito Hosted UI Branding */
+/* Colors: Primary #85b5e2, Light #bddef4, Accent #fcdabb */
+
+.background-customizable {
+  background-color: #f8fbfe;
+}
+
+.banner-customizable {
+  padding: 30px 0;
+  background-color: #fff;
+}
+
+.logo-customizable {
+  max-width: 200px;
+  max-height: 80px;
+}
+
+.label-customizable {
+  font-weight: 500;
+  color: #032254;
+}
+
+.textDescription-customizable {
+  padding: 12px 0;
+  display: block;
+  font-size: 15px;
+  color: #374151;
+}
+
+.idpDescription-customizable {
+  padding: 12px 0;
+  display: block;
+  font-size: 15px;
+  color: #374151;
+}
+
+.legalText-customizable {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* Main submit button - uses primary blue */
+.submitButton-customizable {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 20px 0 10px 0;
+  height: 44px;
+  width: 100%;
+  color: #fff;
+  background-color: #85b5e2;
+  border: none;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.submitButton-customizable:hover {
+  color: #fff;
+  background-color: #5a9ad4;
+}
+
+.errorMessage-customizable {
+  padding: 12px;
+  font-size: 14px;
+  width: 100%;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+}
+
+.inputField-customizable {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  color: #374151;
+  background-color: #fff;
+  border: 1px solid #e6e8ef;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inputField-customizable:focus {
+  border-color: #85b5e2;
+  box-shadow: 0 0 0 3px rgba(133, 181, 226, 0.2);
+  outline: 0;
+}
+
+/* IDP button - uses accent peach color */
+.idpButton-customizable {
+  height: 44px;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 15px;
+  color: #032254;
+  background-color: #fcdabb;
+  border: 1px solid #f5c9a3;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.idpButton-customizable:hover {
+  color: #032254;
+  background-color: #f5c9a3;
+}
+
+.socialButton-customizable {
+  border-radius: 8px;
+  height: 44px;
+  margin-bottom: 15px;
+  padding: 1px;
+  text-align: left;
+  width: 100%;
+}
+
+.redirect-customizable {
+  text-align: center;
+  color: #6b7280;
+}
+
+.passwordCheck-notValid-customizable {
+  color: #dc2626;
+}
+
+.passwordCheck-valid-customizable {
+  color: #16a34a;
+}

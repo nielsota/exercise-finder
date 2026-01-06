@@ -23,6 +23,7 @@ class TestCognitoConfig:
             domain="test.auth.us-east-1.amazoncognito.com",
             client_id="test-client-id",
             client_secret="test-secret",
+            user_pool_id="us-east-1_testpool",
             region="us-east-1",
             redirect_uri="http://localhost:8000/callback",
         )
@@ -30,6 +31,7 @@ class TestCognitoConfig:
         assert config.domain == "test.auth.us-east-1.amazoncognito.com"
         assert config.client_id == "test-client-id"
         assert config.client_secret == "test-secret"
+        assert config.user_pool_id == "us-east-1_testpool"
         assert config.region == "us-east-1"
         assert config.redirect_uri == "http://localhost:8000/callback"
 
@@ -40,6 +42,7 @@ class TestCognitoConfig:
             domain="test.auth.us-east-1.amazoncognito.com",
             client_id="test-client-id",
             client_secret="test-secret",
+            user_pool_id="us-east-1_testpool",
         )
         
         assert config.region == "us-east-1"
@@ -58,12 +61,13 @@ class TestCognitoConfig:
                 CognitoConfig(
                     _env_file=None,
                     domain="test.auth.us-east-1.amazoncognito.com",
-                    # Missing client_id and client_secret
+                    # Missing client_id, client_secret, and user_pool_id
                 )
             
             error = exc_info.value
             assert "client_id" in str(error)
             assert "client_secret" in str(error)
+            assert "user_pool_id" in str(error)
 
     def test_loads_from_env(self):
         """Config should load from environment variables with prefix."""
@@ -71,6 +75,7 @@ class TestCognitoConfig:
             "COGNITO_DOMAIN": "env.auth.us-east-1.amazoncognito.com",
             "COGNITO_CLIENT_ID": "env-client-id",
             "COGNITO_CLIENT_SECRET": "env-secret",
+            "COGNITO_USER_POOL_ID": "us-east-1_envpool",
             "COGNITO_REGION": "eu-west-1",
             "COGNITO_REDIRECT_URI": "https://example.com/callback",
         }
@@ -82,6 +87,7 @@ class TestCognitoConfig:
             
             assert config.domain == "env.auth.us-east-1.amazoncognito.com"
             assert config.client_id == "env-client-id"
+            assert config.user_pool_id == "us-east-1_envpool"
             assert config.region == "eu-west-1"
             assert config.redirect_uri == "https://example.com/callback"
 
@@ -207,6 +213,7 @@ class TestConfigCaching:
             "COGNITO_DOMAIN": "test.auth.us-east-1.amazoncognito.com",
             "COGNITO_CLIENT_ID": "test-client",
             "COGNITO_CLIENT_SECRET": "test-secret",
+            "COGNITO_USER_POOL_ID": "us-east-1_testpool",
         }
         
         with patch.dict("os.environ", env_vars, clear=False):

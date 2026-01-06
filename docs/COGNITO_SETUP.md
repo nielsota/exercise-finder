@@ -56,6 +56,7 @@ Add these variables to your `.env` file:
 COGNITO_DOMAIN=mathwizard-auth.auth.us-east-1.amazoncognito.com
 COGNITO_CLIENT_ID=<from-cognito-console>
 COGNITO_CLIENT_SECRET=<from-cognito-console>
+COGNITO_USER_POOL_ID=us-east-1_xxxxxxxx
 COGNITO_REGION=us-east-1
 
 # For local development
@@ -74,8 +75,7 @@ uv sync
 ```
 
 This installs:
-- `python-jose[cryptography]` - For JWT validation
-- `requests` - For OAuth token exchange
+- `authlib` - AWS-recommended OAuth library with automatic JWT verification
 
 ---
 
@@ -113,14 +113,14 @@ In AWS Cognito Console:
 4. Set session
 ```
 
-### New Flow (Cognito):
+### New Flow (Cognito + authlib):
 ```
 1. Visit /login
-2. Redirect to Cognito hosted UI
+2. authlib redirects to Cognito hosted UI
 3. User logs in on Cognito
 4. Cognito redirects to /callback with code
-5. Exchange code for JWT tokens
-6. Store tokens in session
+5. authlib exchanges code, verifies JWT automatically
+6. User info stored in encrypted session cookie
 7. Redirect to /
 ```
 

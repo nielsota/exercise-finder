@@ -1,5 +1,22 @@
 :root { 
-  color-scheme: light dark; 
+  color-scheme: light dark;
+  
+  /* MathWizard Color Palette */
+  --color-primary: #85b5e2;           /* Darker blue - buttons, links */
+  --color-primary-light: #bddef4;     /* Light blue - backgrounds */
+  --color-primary-dark: #5a9ad4;      /* Hover state */
+  --color-accent: #fcdabb;            /* Peach - accents, highlights */
+  --color-accent-dark: #f5c9a3;       /* Peach hover */
+  
+  /* Derived colors */
+  --color-primary-bg: #eef6fc;        /* Very light blue background */
+  --color-primary-border: #bddef4;    /* Light blue border */
+  --color-shadow: rgba(133, 181, 226, 0.2);  /* Blue-tinted shadow */
+  
+  /* Text colors */
+  --color-text-dark: #032254;
+  --color-text-muted: #6b7280;
+  --color-border: #e6e8ef;
 }
 
 body { 
@@ -11,10 +28,10 @@ body {
 /* Buttons - match figure link style */
 button {
   padding: 10px 16px;
-  background: #f0f7ff;
-  border: 1px solid #cfe0ff;
+  background: var(--color-primary-bg);
+  border: 1px solid var(--color-primary-border);
   border-radius: 10px;
-  color: #0066cc;
+  color: var(--color-primary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -22,8 +39,8 @@ button {
 }
 
 button:hover {
-  background: #e0efff;
-  border-color: #acd0ff;
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
   transform: translateY(-1px);
 }
 
@@ -50,8 +67,8 @@ textarea {
 
 textarea:focus {
   outline: none;
-  border-color: #0066cc;
-  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-shadow);
 }
 
 /* Input number */
@@ -65,8 +82,8 @@ input[type="number"] {
 
 input[type="number"]:focus {
   outline: none;
-  border-color: #0066cc;
-  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-shadow);
 }
 
 /* Layout */
@@ -100,8 +117,8 @@ main {
   background: #fff;
   padding: 20px;
   border-radius: 16px;
-  border: 1px solid #e6e8ef;
-  box-shadow: rgba(0, 129, 214, 0.16) 0px 0px 24px 0px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 0 24px var(--color-shadow);
   margin-bottom: 20px;
 }
 

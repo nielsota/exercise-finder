@@ -8,10 +8,10 @@ body {
 }
 
 .exercise-card {
-  border: 1px solid #e6e8ef;
+  border: 1px solid var(--color-border, #e6e8ef);
   border-radius: 16px;
   background: white;
-  box-shadow: rgba(0, 129, 214, 0.16) 0px 0px 24px 0px;
+  box-shadow: 0 0 24px var(--color-shadow, rgba(133, 181, 226, 0.2));
   overflow: hidden;
   transition: box-shadow 0.2s ease;
   max-width: 100%;
@@ -19,7 +19,7 @@ body {
 }
 
 .exercise-card:hover {
-  box-shadow: rgba(0, 129, 214, 0.24) 0px 0px 32px 0px;
+  box-shadow: 0 0 32px var(--color-shadow, rgba(133, 181, 226, 0.3));
 }
 
 /* Header section */
@@ -54,9 +54,9 @@ body {
 }
 
 .badge-calculator {
-  background: #e9f1ff;
-  border: 1px solid #cfe0ff;
-  color: #0066cc;
+  background: var(--color-primary-bg, #eef6fc);
+  border: 1px solid var(--color-primary-border, #bddef4);
+  color: var(--color-primary, #85b5e2);
 }
 
 .badge-no-calculator {
@@ -127,10 +127,10 @@ body {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: #f0f7ff;
-  border: 1px solid #cfe0ff;
+  background: var(--color-primary-bg, #eef6fc);
+  border: 1px solid var(--color-primary-border, #bddef4);
   border-radius: 10px;
-  color: #0066cc;
+  color: var(--color-primary, #85b5e2);
   text-decoration: none;
   font-size: 14px;
   font-weight: 600;
@@ -138,8 +138,8 @@ body {
 }
 
 .figure-link:hover {
-  background: #e0efff;
-  border-color: #acd0ff;
+  background: var(--color-primary-light, #bddef4);
+  border-color: var(--color-primary, #85b5e2);
   transform: translateY(-1px);
 }
 

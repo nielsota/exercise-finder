@@ -1,20 +1,14 @@
 # mypy: ignore-errors
-"""AWS Cognito authentication module."""
+"""AWS Cognito authentication using authlib (AWS recommended approach)."""
 from __future__ import annotations
 
-import time
-
-import requests  # type: ignore[import-untyped]
-from fastapi import APIRouter, Query  # type: ignore[import-not-found]
-from fastapi.responses import HTMLResponse  # type: ignore[import-not-found]
+from authlib.integrations.starlette_client import OAuth  # type: ignore[import-untyped]
+from fastapi import APIRouter  # type: ignore[import-not-found]
 from fastapi.templating import Jinja2Templates  # type: ignore[import-not-found]
-from jose import JWTError, jwt  # type: ignore[import-untyped]
 from starlette.requests import Request  # type: ignore[import-not-found]
 from starlette.responses import RedirectResponse  # type: ignore[import-not-found]
 
-from exercise_finder import paths
 from exercise_finder.config import get_cognito_config
-from exercise_finder.constants import SESSION_EXPIRATION_SECONDS
 
 
 class NotAuthenticatedException(Exception):
@@ -22,40 +16,28 @@ class NotAuthenticatedException(Exception):
     pass
 
 
+def _get_oauth() -> OAuth:
+    """Create and configure OAuth client for Cognito."""
+    config = get_cognito_config()
+    oauth = OAuth()
+    
+    # Cognito OpenID Connect discovery URL
+    issuer = f"https://cognito-idp.{config.region}.amazonaws.com/{config.user_pool_id}"
+    
+    oauth.register(
+        name="cognito",
+        client_id=config.client_id,
+        client_secret=config.client_secret,
+        server_metadata_url=f"{issuer}/.well-known/openid-configuration",
+        client_kwargs={"scope": "openid email"},
+    )
+    
+    return oauth
+
+
 def is_authenticated(request: Request) -> bool:
-    """Check if the user has a valid Cognito session from cookies."""
-    id_token = request.cookies.get("id_token")
-    if not id_token:
-        return False
-    
-    login_time_str = request.cookies.get("login_time")
-    if not login_time_str:
-        return False
-    
-    try:
-        login_time = float(login_time_str)
-        if time.time() - login_time > SESSION_EXPIRATION_SECONDS:
-            return False
-        
-        # Validate JWT structure (without signature verification)
-        jwt.decode(
-            id_token,
-            key=None,
-            options={
-                "verify_signature": False,
-                "verify_aud": False,
-                "verify_iat": False,
-                "verify_exp": False,
-                "verify_nbf": False,
-                "verify_iss": False,
-                "verify_sub": False,
-                "verify_jti": False,
-                "verify_at_hash": False,
-            }
-        )
-        return True
-    except (ValueError, JWTError):
-        return False
+    """Check if the user has a valid session with user info."""
+    return request.session.get("user") is not None
 
 
 def require_authentication(request: Request) -> bool:
@@ -70,91 +52,53 @@ def require_authentication(request: Request) -> bool:
     return True
 
 
+def get_user_email(request: Request) -> str | None:
+    """Get the authenticated user's email from the session."""
+    user = request.session.get("user")
+    return user.get("email") if user else None
+
+
 def create_auth_router(templates: Jinja2Templates) -> APIRouter:
     """Create the authentication router with Cognito OAuth flow."""
     router = APIRouter(tags=["authentication"])
     config = get_cognito_config()
+    oauth = _get_oauth()
 
     @router.get("/login", response_model=None)
-    async def login(request: Request) -> RedirectResponse | HTMLResponse:
+    async def login(request: Request) -> RedirectResponse:
         """Redirect to Cognito hosted UI for login."""
-        if is_authenticated(request):
-            return RedirectResponse(url="/", status_code=303)
-        
-        params = {
-            "client_id": config.client_id,
-            "response_type": "code",
-            "scope": "email openid",
-            "redirect_uri": config.redirect_uri,
-        }
-        
-        cognito_url = paths.cognito_login_url(config.domain, params)
-        return RedirectResponse(url=cognito_url, status_code=303)
+        return await oauth.cognito.authorize_redirect(request, config.redirect_uri)
 
     @router.get("/callback")
-    async def callback(
-        request: Request,
-        code: str = Query(..., description="Authorization code from Cognito"),
-    ) -> RedirectResponse:
+    async def callback(request: Request) -> RedirectResponse:
         """Handle OAuth callback from Cognito."""
-        token_url = paths.cognito_token_url(config.domain)
-        
-        data = {
-            "grant_type": "authorization_code",
-            "client_id": config.client_id,
-            "client_secret": config.client_secret,
-            "code": code,
-            "redirect_uri": config.redirect_uri,
-        }
-        
         try:
-            response = requests.post(token_url, data=data, timeout=10)
-            response.raise_for_status()
-            tokens = response.json()
+            token = await oauth.cognito.authorize_access_token(request)
             
-            # Store tokens directly in HTTP-only cookies
-            response = RedirectResponse(url="/", status_code=303)
+            # Store user info in session (authlib parses the ID token automatically)
+            user_info = token.get("userinfo")
+            if user_info:
+                request.session["user"] = dict(user_info)
             
-            # Set secure HTTP-only cookies
-            response.set_cookie(
-                key="id_token",
-                value=tokens["id_token"],
-                max_age=SESSION_EXPIRATION_SECONDS,
-                httponly=True,
-                samesite="lax",
-                secure=False,  # Set to True in production with HTTPS
-            )
-            response.set_cookie(
-                key="login_time",
-                value=str(int(time.time())),
-                max_age=SESSION_EXPIRATION_SECONDS,
-                httponly=True,
-                samesite="lax",
-                secure=False,
-            )
-            
-            return response
+            return RedirectResponse(url="/", status_code=303)
             
         except Exception as e:
             print(f"OAuth callback error: {e}")
-            return RedirectResponse(url="/login?error=authentication_failed", status_code=303)
+            return RedirectResponse(url="/login?error=auth_failed", status_code=303)
 
-    @router.post("/logout")
     @router.get("/logout")
+    @router.post("/logout")
     async def logout(request: Request) -> RedirectResponse:
-        """Clear auth cookies and redirect to Cognito logout."""
-        params = {
-            "client_id": config.client_id,
-            "logout_uri": config.redirect_uri.replace("/callback", "/login"),
-        }
+        """Clear session and redirect to Cognito logout."""
+        request.session.clear()
         
-        cognito_logout_url = paths.cognito_logout_url(config.domain, params)
-        response = RedirectResponse(url=cognito_logout_url, status_code=303)
+        logout_uri = config.redirect_uri.replace("/callback", "/")
+        cognito_logout_url = (
+            f"https://{config.domain}/logout"
+            f"?client_id={config.client_id}"
+            f"&logout_uri={logout_uri}"
+        )
         
-        # Delete auth cookies
-        response.delete_cookie("id_token")
-        response.delete_cookie("login_time")
-        
-        return response
+        return RedirectResponse(url=cognito_logout_url, status_code=303)
 
     return router
